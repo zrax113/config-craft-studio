@@ -6,13 +6,13 @@ import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser"
 import { detectPlugin, type DetectionResult, type PluginId, PLUGIN_LIST } from "@/lib/plugin-detect";
 import { SAMPLE_LIST } from "@/lib/sample-configs";
 import { loadSample } from "@/lib/sample-loader";
-import { onLoadPlugin } from "@/lib/plugin-bus";
+import { onLoadPlugin, onLoadPack } from "@/lib/plugin-bus";
 import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
 import { useHistory } from "@/hooks/useHistory";
-import { validateAgainstSchema, type SchemaIssue } from "@/lib/schema";
+import { validateAgainstSchema, analyzeConfig, type SchemaIssue } from "@/lib/schema";
 import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
 import {
   Check,
@@ -31,6 +31,8 @@ import {
   ClipboardPaste,
   Files,
   HelpCircle,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
