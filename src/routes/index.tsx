@@ -158,6 +158,7 @@ function Studio() {
         {/* Workspace */}
         <main className="relative z-10 flex-1 overflow-auto p-5">
           <ConfigStudio />
+          <Onboarding />
         </main>
       </div>
     </div>
