@@ -292,6 +292,145 @@ rtp:
   radius: 5000
 `,
   },
+  mcmmo: {
+    label: "mcMMO",
+    format: "yaml",
+    content: `Skills:
+  General:
+    StatsTrackingEnabled: true
+    Power_Level_Cap: 0
+  Mining:
+    Enabled: true
+    Level_Cap: 1000
+    XP_Multiplier: 1.0
+Items:
+  Chimaera_Wing:
+    Enabled: true
+    Item_Material: FEATHER
+`,
+  },
+  jobs: {
+    label: "Jobs Reborn",
+    format: "yaml",
+    content: `storage:
+  method: sqlite
+  database: jobs
+JobsName: Jobs
+broadcast-on-skill-up: true
+broadcast-on-level-up: true
+economy:
+  currency-symbol: '$'
+  use-server-economy: true
+`,
+  },
+  decentholograms: {
+    label: "DecentHolograms",
+    format: "yaml",
+    content: `check-for-updates: true
+default-text-color: '&f'
+bungee-mode: false
+defaults:
+  display-range: 48
+  update-range: 48
+  update-interval: 20
+`,
+  },
+  dynmap: {
+    label: "Dynmap",
+    format: "yaml",
+    content: `webserver-port: 8123
+render-triggers:
+  - chunkloaded
+  - playermove
+storage:
+  type: sqlite
+`,
+  },
+  townyadvanced: {
+    label: "Towny",
+    format: "yaml",
+    content: `language: english.yml
+global_town_settings:
+  max_residents_per_town: 0
+  max_plots_per_town: 500
+town:
+  def_town_taxes: 0.0
+nation:
+  def_nation_taxes: 0.0
+`,
+  },
+  nuvotifier: {
+    label: "NuVotifier",
+    format: "yaml",
+    content: `host: 0.0.0.0
+port: 8192
+debug: false
+forwarding:
+  method: none
+tokens:
+  default: CHANGE_ME
+`,
+  },
+  worldborder: {
+    label: "WorldBorder",
+    format: "yaml",
+    content: `worlds:
+  world:
+    radiusX: 5000
+    radiusZ: 5000
+    x: 0.0
+    z: 0.0
+    shape: round
+round-border: true
+knockback: 3.0
+`,
+  },
+  bluemap: {
+    label: "BlueMap",
+    format: "yaml",
+    content: `accept-download: false
+render-thread-count: -2
+metrics: true
+webserver:
+  enabled: true
+  ip: 0.0.0.0
+  port: 8100
+`,
+  },
+  factions: {
+    label: "Factions",
+    format: "yaml",
+    content: `powerPerPlayer: 10.0
+powerPerDeath: 4.0
+`,
+  },
+  quests: {
+    label: "Quests",
+    format: "yaml",
+    content: `options:
+  language: en-US
+  show-quest-titles: true
+  allow-command-questing: true
+quests: []
+`,
+  },
+  bungeecord: {
+    label: "BungeeCord",
+    format: "yaml",
+    content: `listeners:
+  - host: 0.0.0.0:25577
+    motd: '&aA Minecraft Server'
+    max_players: 100
+    priorities:
+      - lobby
+servers:
+  lobby:
+    address: 127.0.0.1:25565
+    restricted: false
+groups: {}
+`,
+  },
 };
 
 export const SAMPLE_LIST = Object.entries(SAMPLES) as [PluginId, NonNullable<(typeof SAMPLES)[PluginId]>][];
+
