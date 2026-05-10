@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser";
-import { detectPlugin, type DetectionResult, PLUGIN_LIST } from "@/lib/plugin-detect";
+import { detectPlugin, type DetectionResult, type PluginId, PLUGIN_LIST } from "@/lib/plugin-detect";
 import { SAMPLE_LIST } from "@/lib/sample-configs";
 import { loadSample } from "@/lib/sample-loader";
 import { onLoadPlugin } from "@/lib/plugin-bus";
@@ -28,6 +28,9 @@ import {
   Redo2,
   Package,
   AlertTriangle,
+  ClipboardPaste,
+  Files,
+  HelpCircle,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
@@ -188,6 +191,23 @@ export function ConfigStudio() {
     file.text().then((t) => setRaw(t));
   }
 
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        toast.error("Clipboard is empty");
+        return;
+      }
+      setFilename(undefined);
+      setRaw(text);
+      toast.success("Pasted from clipboard");
+    } catch {
+      toast.error("Clipboard access blocked", {
+        description: "Use ⌘V / Ctrl+V inside the editor instead.",
+      });
+    }
+  }
+
   function reset() {
     setRaw("");
     editedHistory.reset(null);
@@ -203,7 +223,16 @@ export function ConfigStudio() {
         icon={<Wand2 className="size-4" />}
         delay={0}
       >
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 text-xs"
+            onClick={pasteFromClipboard}
+            title="Paste from clipboard"
+          >
+            <ClipboardPaste className="size-3.5 mr-1.5" /> Paste
+          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -242,6 +271,14 @@ export function ConfigStudio() {
             ))}
           </div>
         </div>
+
+        <PackFilePicker detectionId={detection?.id} onPick={async (sampleId) => {
+          const sample = await loadSample(sampleId);
+          if (sample) {
+            applySample(sample.content, sample.format);
+            toast.success(`Loaded ${sample.label}`);
+          }
+        }} />
 
         <CodeEditor
           value={raw}
@@ -355,6 +392,30 @@ export function ConfigStudio() {
               transition={{ duration: 0.25 }}
               className="space-y-1 min-w-0"
             >
+              {detection && detection.id === "unknown" && (
+                <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5 font-semibold text-foreground/80 uppercase tracking-wider mb-1">
+                    <HelpCircle className="size-3.5" /> Unrecognized config
+                  </div>
+                  <p className="leading-relaxed">
+                    We couldn't match a known plugin — editing as a generic config. Closest guesses:{" "}
+                    {detection.candidates.slice(0, 3).map((c, i) => (
+                      <span key={c.id}>
+                        {i > 0 && ", "}
+                        <button
+                          className="underline decoration-dotted hover:text-primary"
+                          onClick={async () => {
+                            const s = await loadSample(c.id);
+                            if (s) applySample(s.content, s.format);
+                          }}
+                        >
+                          {c.name}
+                        </button>
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              )}
               {schemaIssues.length > 0 && (
                 <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 p-2.5 space-y-1">
                   <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warning uppercase tracking-wider">
@@ -564,4 +625,42 @@ function styleValue(v: string): React.ReactNode {
   if (/^-?\d+(\.\d+)?$/.test(t)) return <span className="text-warning">{v}</span>;
   if (/^["'].*["']$/.test(t)) return <span className="text-success">{v}</span>;
   return <span>{v}</span>;
+}
+
+/** Pack file picker — when the loaded plugin belongs to a multi-file pack
+ *  (e.g. EssentialsX with config.yml + messages.yml + kits.yml…), render a
+ *  VS-Code-like row of file tabs so the user can hop between related files. */
+function PackFilePicker({
+  detectionId,
+  onPick,
+}: {
+  detectionId?: PluginId;
+  onPick: (sampleId: PluginId) => void | Promise<void>;
+}) {
+  if (!detectionId || detectionId === "unknown") return null;
+  const packKey = packForPlugin(detectionId);
+  if (!packKey) return null;
+  const pack = PLUGIN_PACKS[packKey];
+  return (
+    <div className="mb-3 -mt-1 flex items-center gap-1.5 overflow-x-auto pb-1">
+      <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold shrink-0 flex items-center gap-1">
+        <Files className="size-3" /> {pack.name} files
+      </span>
+      <div className="flex gap-1 shrink-0">
+        {pack.files.map((f) => (
+          <button
+            key={f.sampleId}
+            onClick={() => onPick(f.sampleId)}
+            className={`text-[11px] px-2 py-1 rounded-md border transition-all whitespace-nowrap ${
+              f.sampleId === detectionId
+                ? "bg-primary/15 border-primary/40 text-primary"
+                : "bg-muted/30 border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+            }`}
+          >
+            {f.filename}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }

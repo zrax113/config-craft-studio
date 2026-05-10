@@ -612,25 +612,30 @@ export function detectPlugin(
   }).sort((a, b) => b.raw - a.raw);
 
   const top = scores[0];
-  // Require either ≥1 unique hit, a filename match, or raw ≥ 3
-  if (!top || (top.uniqueHits === 0 && top.raw < 3)) {
+  const candidates = scores.slice(0, 5).map((s) => ({ id: s.id, name: s.name, score: s.score }));
+  // Strong: ≥1 unique hit OR filename match OR raw ≥ 3
+  if (top && (top.uniqueHits > 0 || top.raw >= 3)) {
     return {
-      id: "unknown",
-      name: "Unknown",
-      category: "unknown",
-      confidence: 0,
+      id: top.id,
+      name: top.name,
+      category: top.category,
+      confidence: top.score,
       format,
-      candidates: scores.slice(0, 3).map((s) => ({ id: s.id, name: s.name, score: s.score })),
+      candidates,
     };
   }
-  return {
-    id: top.id,
-    name: top.name,
-    category: top.category,
-    confidence: top.score,
-    format,
-    candidates: scores.slice(0, 5).map((s) => ({ id: s.id, name: s.name, score: s.score })),
-  };
+  // Tentative: any signal at all — surface as low-confidence match instead of pure unknown
+  if (top && top.raw >= 1) {
+    return {
+      id: top.id,
+      name: top.name,
+      category: top.category,
+      confidence: Math.min(top.score, 0.35),
+      format,
+      candidates,
+    };
+  }
+  return { id: "unknown", name: "Unknown", category: "unknown", confidence: 0, format, candidates };
 }
 
 export const PLUGIN_LIST = SIGNATURES;
