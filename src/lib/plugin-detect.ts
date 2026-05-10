@@ -27,12 +27,36 @@ export type PluginId =
   | "paper"
   | "spigot"
   | "purpur"
+  | "essentials_messages"
+  | "essentials_kits"
+  | "essentials_worth"
+  | "essentials_spawns"
+  | "luckperms_messages"
+  | "tab_messages"
+  | "discordsrv_messages"
+  | "vane"
+  | "advancedban"
+  | "litebans"
+  | "shopgui"
+  | "playerwarps"
+  | "huskhomes"
+  | "husksync"
+  | "chatcontrol"
+  | "betterrtp"
+  | "headdatabase"
+  | "premiumvanish"
+  | "advanced_enchantments"
+  | "itemsadder"
+  | "oraxen"
+  | "modelengine"
+  | "redisbungee"
+  | "litebackup"
   | "unknown";
 
 export interface PluginSignature {
   id: PluginId;
   name: string;
-  category: "permissions" | "core" | "ui" | "world" | "economy" | "social" | "proxy" | "server" | "scripting" | "other";
+  category: "permissions" | "core" | "ui" | "world" | "economy" | "social" | "proxy" | "server" | "scripting" | "messages" | "other";
   format: ConfigFormat;
   /** unique top-level keys (high weight) */
   unique?: string[];
