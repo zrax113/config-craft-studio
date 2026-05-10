@@ -6,13 +6,13 @@ import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser"
 import { detectPlugin, type DetectionResult, type PluginId, PLUGIN_LIST } from "@/lib/plugin-detect";
 import { SAMPLE_LIST } from "@/lib/sample-configs";
 import { loadSample } from "@/lib/sample-loader";
-import { onLoadPlugin } from "@/lib/plugin-bus";
+import { onLoadPlugin, onLoadPack } from "@/lib/plugin-bus";
 import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
 import { useHistory } from "@/hooks/useHistory";
-import { validateAgainstSchema, type SchemaIssue } from "@/lib/schema";
+import { validateAgainstSchema, analyzeConfig, type SchemaIssue } from "@/lib/schema";
 import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
 import {
   Check,
@@ -31,6 +31,8 @@ import {
   ClipboardPaste,
   Files,
   HelpCircle,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
@@ -51,7 +53,9 @@ export function ConfigStudio() {
   const edited = editedHistory.value;
   const [format, setFormat] = useState<ConfigFormat>("yaml");
   const [filename, setFilename] = useState<string | undefined>();
+  const [currentSampleId, setCurrentSampleId] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
+  const [packIds, setPackIds] = useState<string[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const outputScrollRef = useRef<HTMLPreElement>(null);
@@ -83,13 +87,19 @@ export function ConfigStudio() {
   }, [edited, format]);
 
   const schemaIssues: SchemaIssue[] = useMemo(() => {
-    if (!detection || detection.id === "unknown" || !edited) return [];
-    return validateAgainstSchema(detection.id, edited);
-  }, [detection, edited]);
+    if (!edited) return [];
+    return validateAgainstSchema(
+      { sampleId: currentSampleId, pluginId: detection && detection.id !== "unknown" ? detection.id : undefined },
+      edited,
+    );
+  }, [detection, edited, currentSampleId]);
 
-  function applySample(content: string, fmt: "yaml" | "toml" | "json") {
+  const stats = useMemo(() => (edited ? analyzeConfig(edited) : null), [edited]);
+
+  function applySample(content: string, fmt: "yaml" | "toml" | "json", sampleId?: string) {
     setFormat(fmt);
     setFilename(undefined);
+    setCurrentSampleId(sampleId);
     setRaw(content);
   }
 
@@ -129,7 +139,8 @@ export function ConfigStudio() {
       const meta = PLUGIN_LIST.find((p) => p.id === id);
       const sample = await loadSample(id);
       if (sample) {
-        applySample(sample.content, sample.format);
+        applySample(sample.content, sample.format, id);
+        setPackIds(null);
         toast.success(`Loaded ${sample.label}`, {
           description: "Default config inserted — edit & export.",
         });
@@ -139,8 +150,12 @@ export function ConfigStudio() {
         });
       }
     });
+    const offPack = onLoadPack((ids) => {
+      setPackIds(ids);
+    });
     return () => {
       off();
+      offPack();
     };
   }, []);
 
@@ -298,13 +313,18 @@ export function ConfigStudio() {
           </div>
         </div>
 
-        <PackFilePicker detectionId={detection?.id} onPick={async (sampleId) => {
-          const sample = await loadSample(sampleId);
-          if (sample) {
-            applySample(sample.content, sample.format);
-            toast.success(`Loaded ${sample.label}`);
-          }
-        }} />
+        <PackFilePicker
+          detectionId={detection?.id}
+          currentSampleId={currentSampleId}
+          extraSampleIds={packIds ?? undefined}
+          onPick={async (sampleId) => {
+            const sample = await loadSample(sampleId);
+            if (sample) {
+              applySample(sample.content, sample.format, sampleId);
+              toast.success(`Loaded ${sample.label}`);
+            }
+          }}
+        />
 
         <CodeEditor
           value={raw}
@@ -397,6 +417,15 @@ export function ConfigStudio() {
             >
               <Redo2 className="size-3.5" />
             </Button>
+            {stats && (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-mono border-border/50 text-muted-foreground hidden md:inline-flex"
+                title={`${stats.keys} keys · depth ${stats.depth} · ${stats.leaves} leaves`}
+              >
+                {stats.keys}k · d{stats.depth}
+              </Badge>
+            )}
             {cfg.studio.showPluginBadge && detection && detection.id !== "unknown" && (
               <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={detection.id}>
                 <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
@@ -432,7 +461,7 @@ export function ConfigStudio() {
                           className="underline decoration-dotted hover:text-primary"
                           onClick={async () => {
                             const s = await loadSample(c.id);
-                            if (s) applySample(s.content, s.format);
+                            if (s) applySample(s.content, s.format, c.id);
                           }}
                         >
                           {c.name}
@@ -573,13 +602,30 @@ function Panel({
   children: React.ReactNode;
   delay?: number;
 }) {
+  const [maximized, setMaximized] = useState(false);
+
+  // Esc to exit fullscreen
+  useEffect(() => {
+    if (!maximized) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMaximized(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [maximized]);
+
   return (
     <motion.section
+      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ borderColor: "transparent" }}
-      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
+      className={
+        maximized
+          ? "glass glass-shine rounded-2xl p-4 flex flex-col fixed inset-2 sm:inset-4 z-50 min-w-0 shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.4),0_40px_120px_-20px_oklch(0_0_0_/_0.8)] animate-scale-in"
+          : "glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
+      }
     >
       <header className="flex items-center justify-between gap-2 flex-wrap pb-3 mb-3 border-b border-border/40">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -591,7 +637,19 @@ function Panel({
             <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>{subtitle}</p>
           </div>
         </div>
-        {accessory && <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">{accessory}</div>}
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+          {accessory}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2"
+            onClick={() => setMaximized((m) => !m)}
+            aria-label={maximized ? "Exit fullscreen" : "Enter fullscreen"}
+            title={maximized ? "Exit fullscreen (Esc)" : "Fullscreen this panel"}
+          >
+            {maximized ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+          </Button>
+        </div>
       </header>
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </motion.section>
@@ -669,31 +727,54 @@ function styleValue(v: string): React.ReactNode {
 
 /** Pack file picker — when the loaded plugin belongs to a multi-file pack
  *  (e.g. EssentialsX with config.yml + messages.yml + kits.yml…), render a
- *  VS-Code-like row of file tabs so the user can hop between related files. */
+ *  VS-Code-like row of file tabs so the user can hop between related files.
+ *  `extraSampleIds` lets the sidebar's "Load all" override the static pack
+ *  with the live manifest contents (covers freshly-added files). */
 function PackFilePicker({
   detectionId,
+  currentSampleId,
+  extraSampleIds,
   onPick,
 }: {
   detectionId?: PluginId;
-  onPick: (sampleId: PluginId) => void | Promise<void>;
+  currentSampleId?: string;
+  extraSampleIds?: string[];
+  onPick: (sampleId: string) => void | Promise<void>;
 }) {
-  if (!detectionId || detectionId === "unknown") return null;
-  const packKey = packForPlugin(detectionId);
-  if (!packKey) return null;
-  const pack = PLUGIN_PACKS[packKey];
+  type Tab = { sampleId: string; filename: string };
+  let tabs: Tab[] = [];
+  let label = "Files";
+  if (extraSampleIds?.length) {
+    tabs = extraSampleIds.map((id) => ({ sampleId: id, filename: id }));
+    label = "Loaded files";
+  } else if (detectionId && detectionId !== "unknown") {
+    const packKey = packForPlugin(detectionId);
+    if (packKey) {
+      const pack = PLUGIN_PACKS[packKey];
+      tabs = pack.files.map((f) => ({ sampleId: f.sampleId, filename: f.filename }));
+      label = `${pack.name} files`;
+    }
+  }
+  if (tabs.length === 0) return null;
+  const active = currentSampleId ?? detectionId;
   return (
-    <div className="mb-3 -mt-1 flex items-center gap-1.5 overflow-x-auto pb-1">
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="mb-3 -mt-1 flex items-center gap-1.5 overflow-x-auto pb-1"
+    >
       <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold shrink-0 flex items-center gap-1">
-        <Files className="size-3" /> {pack.name} files
+        <Files className="size-3" /> {label}
       </span>
       <div className="flex gap-1 shrink-0">
-        {pack.files.map((f) => (
+        {tabs.map((f) => (
           <button
             key={f.sampleId}
             onClick={() => onPick(f.sampleId)}
             className={`text-[11px] px-2 py-1 rounded-md border transition-all whitespace-nowrap ${
-              f.sampleId === detectionId
-                ? "bg-primary/15 border-primary/40 text-primary"
+              f.sampleId === active
+                ? "bg-primary/15 border-primary/40 text-primary shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.3)]"
                 : "bg-muted/30 border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
             }`}
           >
@@ -701,6 +782,6 @@ function PackFilePicker({
           </button>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

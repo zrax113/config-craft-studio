@@ -142,7 +142,14 @@ function PluginList({
     }, 220);
   };
 
+  // Hide sub-file entries (e.g. essentials_messages, tab_messages) — they are
+  // already shown when expanding the parent plugin. Listing them at top level
+  // creates duplicate folders that share the exact same files.
+  const isChildSample = (id: string) =>
+    /_(messages|kits|worth|spawns|alerts|linking|animations|groups|placeholders|templates)$/i.test(id);
+
   const grouped = PLUGIN_LIST.reduce<Record<string, typeof PLUGIN_LIST>>((acc, p) => {
+    if (isChildSample(p.id)) return acc;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return acc;
     (acc[p.category] ??= [] as any).push(p);
     return acc;
