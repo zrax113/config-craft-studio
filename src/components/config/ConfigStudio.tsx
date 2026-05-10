@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser";
 import { detectPlugin, type DetectionResult, PLUGIN_LIST } from "@/lib/plugin-detect";
-import { SAMPLES, SAMPLE_LIST } from "@/lib/sample-configs";
+import { SAMPLE_LIST } from "@/lib/sample-configs";
+import { loadSample } from "@/lib/sample-loader";
 import { onLoadPlugin } from "@/lib/plugin-bus";
 import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
 import { useHistory } from "@/hooks/useHistory";
+import { validateAgainstSchema, type SchemaIssue } from "@/lib/schema";
+import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
 import {
   Check,
   Copy,
@@ -23,6 +26,8 @@ import {
   RotateCcw,
   Undo2,
   Redo2,
+  Package,
+  AlertTriangle,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
