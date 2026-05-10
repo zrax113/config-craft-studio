@@ -62,7 +62,7 @@ function Studio() {
       {/* Top bar */}
       <header className="relative z-20 h-14 shrink-0 border-b border-border/40 bg-background/70 backdrop-blur-xl flex items-center px-4 gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-lg bg-primary/15 border border-primary/25 text-primary flex items-center justify-center">
+          <div className="size-8 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 border border-primary/30 text-primary flex items-center justify-center pulse-glow">
             <Bolt className="size-4" strokeWidth={2.4} />
           </div>
           <div className="leading-tight">
