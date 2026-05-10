@@ -1,10 +1,12 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser";
-import { detectPlugin, type DetectionResult } from "@/lib/plugin-detect";
-import { SAMPLE_LIST } from "@/lib/sample-configs";
+import { detectPlugin, type DetectionResult, PLUGIN_LIST } from "@/lib/plugin-detect";
+import { SAMPLES, SAMPLE_LIST } from "@/lib/sample-configs";
+import { onLoadPlugin } from "@/lib/plugin-bus";
+import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
@@ -73,6 +75,25 @@ export function ConfigStudio() {
     setFilename(undefined);
     setRaw(content);
   }
+
+  // Listen for sidebar plugin clicks
+  useEffect(() => {
+    const off = onLoadPlugin((id) => {
+      const sample = SAMPLES[id];
+      const meta = PLUGIN_LIST.find((p) => p.id === id);
+      if (sample) {
+        loadSample(sample.content, sample.format);
+        toast.success(`Loaded ${sample.label}`, {
+          description: "Default config inserted — edit & export.",
+        });
+      } else {
+        toast.error(`No default config for ${meta?.name ?? id}`, {
+          description: "Sample not bundled yet — paste your own to start editing.",
+        });
+      }
+    });
+    return () => { off(); };
+  }, []);
 
   function update(path: string[], value: any) {
     setEdited((prev: any) => setDeep(prev, path, value));
@@ -343,7 +364,7 @@ function Panel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass rounded-2xl p-4 flex flex-col min-h-[60vh] relative"
+      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] relative"
     >
       <header className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/40">
         <div className="flex items-center gap-2.5 min-w-0">

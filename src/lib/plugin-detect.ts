@@ -51,6 +51,46 @@ export type PluginId =
   | "modelengine"
   | "redisbungee"
   | "litebackup"
+  | "magicspells"
+  | "quests"
+  | "betonquest"
+  | "decentholograms"
+  | "holographicdisplays"
+  | "supervanish"
+  | "wildstacker"
+  | "stackmob"
+  | "clearlag"
+  | "fastasyncworldedit"
+  | "betterrtp2"
+  | "graves"
+  | "treeassist"
+  | "mcmmo"
+  | "jobs"
+  | "townyadvanced"
+  | "factions"
+  | "lwc"
+  | "essentialsxchat"
+  | "ezprestige"
+  | "dynmap"
+  | "bluemap"
+  | "squaremap"
+  | "viaproxy"
+  | "geyserstandalone"
+  | "votifier"
+  | "nuvotifier"
+  | "playerpoints"
+  | "coinsengine"
+  | "betterreload"
+  | "skinsrestorer"
+  | "openinv"
+  | "worldborder"
+  | "essentialsxgeoip"
+  | "armorstandeditor"
+  | "auctionhouse"
+  | "deluxetags"
+  | "deluxechat"
+  | "ezauctions"
+  | "papimacros"
   | "unknown";
 
 export interface PluginSignature {
@@ -468,6 +508,41 @@ export const SIGNATURES: PluginSignature[] = [
     unique: ["backup-interval", "backup-folder"],
     any: ["compression", "max-backups"],
   },
+  // ─── Extras ───
+  { id: "magicspells", name: "MagicSpells", category: "other", format: "yaml", unique: ["spells", "general"], any: ["enableProfiling"] },
+  { id: "quests", name: "Quests", category: "other", format: "yaml", unique: ["quests", "options"], any: ["language", "show-quest-titles"] },
+  { id: "betonquest", name: "BetonQuest", category: "scripting", format: "yaml", unique: ["mysql", "language", "default_journal_slot"], any: ["debug"] },
+  { id: "decentholograms", name: "DecentHolograms", category: "ui", format: "yaml", unique: ["check-for-updates", "default-text-color"], any: ["bungee-mode"] },
+  { id: "holographicdisplays", name: "HolographicDisplays", category: "ui", format: "yaml", unique: ["images", "time-format"], any: ["space-between-lines"] },
+  { id: "supervanish", name: "SuperVanish", category: "other", format: "yaml", unique: ["EnableInvisibility", "Hooks"], any: ["RunCommandsOnVanishStateChange"] },
+  { id: "wildstacker", name: "WildStacker", category: "other", format: "yaml", unique: ["items", "entities", "spawners"], any: ["save-interval"] },
+  { id: "stackmob", name: "StackMob", category: "other", format: "yaml", unique: ["stack", "tools"], any: ["check-area"] },
+  { id: "clearlag", name: "ClearLag", category: "other", format: "yaml", unique: ["auto-removal", "limits"], any: ["worlds"] },
+  { id: "fastasyncworldedit", name: "FastAsyncWorldEdit", category: "world", format: "yaml", unique: ["max-memory-percent", "history"], any: ["queue", "limits"] },
+  { id: "graves", name: "Graves", category: "other", format: "yaml", unique: ["settings.grave", "config-version"], any: ["compass", "skin"] },
+  { id: "treeassist", name: "TreeAssist", category: "world", format: "yaml", unique: ["Main", "Worlds"], any: ["Automatic Tree Destruction"] },
+  { id: "mcmmo", name: "mcMMO", category: "other", format: "yaml", unique: ["Skills", "Items"], any: ["Mob_Healthbar", "Particles"] },
+  { id: "jobs", name: "Jobs Reborn", category: "economy", format: "yaml", unique: ["JobsName", "storage"], any: ["broadcast-on-skill-up"] },
+  { id: "townyadvanced", name: "Towny", category: "world", format: "yaml", unique: ["town", "nation", "global_town_settings"], any: ["language"] },
+  { id: "factions", name: "Factions", category: "world", format: "yaml", unique: ["factions", "powerPerPlayer"], any: ["powerPerDeath"] },
+  { id: "lwc", name: "LWC", category: "world", format: "yaml", unique: ["protections", "modes"], any: ["unlock"] },
+  { id: "essentialsxchat", name: "EssentialsXChat", category: "social", format: "yaml", unique: ["chat", "format"], any: ["radius", "group-formats"] },
+  { id: "dynmap", name: "Dynmap", category: "ui", format: "yaml", unique: ["webserver-port", "render-triggers"], any: ["storage", "components"] },
+  { id: "bluemap", name: "BlueMap", category: "ui", format: "yaml", unique: ["accept-download", "render-thread-count"], any: ["data", "metrics"] },
+  { id: "squaremap", name: "squaremap", category: "ui", format: "yaml", unique: ["settings", "world-settings"], any: ["web-address"] },
+  { id: "viaproxy", name: "ViaProxy", category: "proxy", format: "yaml", unique: ["bind-address", "target-address"], any: ["target-version"] },
+  { id: "votifier", name: "Votifier", category: "social", format: "yaml", unique: ["host", "port"], any: ["debug"] },
+  { id: "nuvotifier", name: "NuVotifier", category: "social", format: "yaml", unique: ["forwarding", "tokens"], any: ["host", "port"] },
+  { id: "playerpoints", name: "PlayerPoints", category: "economy", format: "yaml", unique: ["points-per-second"], any: ["money-conversion-rate"] },
+  { id: "coinsengine", name: "CoinsEngine", category: "economy", format: "yaml", unique: ["currencies", "default_currency"], any: ["main_command_aliases"] },
+  { id: "betterreload", name: "BetterReload", category: "core", format: "yaml", unique: ["reload-config-on-reload"], any: ["plugins"] },
+  { id: "skinsrestorer", name: "SkinsRestorer", category: "ui", format: "yaml", unique: ["SkinsPerGUIPage", "DefaultSkins"], any: ["RestrictSkinUrls"] },
+  { id: "openinv", name: "OpenInv", category: "other", format: "yaml", unique: ["NotifySilentChest", "AnyChest"], any: ["ItemOpenInv"] },
+  { id: "worldborder", name: "WorldBorder", category: "world", format: "yaml", unique: ["worlds", "round-border"], any: ["fill-autosave-frequency"] },
+  { id: "armorstandeditor", name: "ArmorStandEditor", category: "ui", format: "yaml", unique: ["nbtEditorEnabled", "minClientVersion"], any: ["allowedWorlds"] },
+  { id: "auctionhouse", name: "AuctionHouse", category: "economy", format: "yaml", unique: ["auction-time", "max-auctions-per-player"], any: ["currency", "tax"] },
+  { id: "deluxetags", name: "DeluxeTags", category: "ui", format: "yaml", unique: ["tags", "default_tag"], any: ["check_for_updates"] },
+  { id: "deluxechat", name: "DeluxeChat", category: "social", format: "yaml", unique: ["formats", "options"], any: ["use_placeholderapi"] },
 ];
 
 export interface DetectionResult {

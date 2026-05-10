@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { emitLoadPlugin } from "@/lib/plugin-bus";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,7 +62,7 @@ function Studio() {
       {/* Top bar */}
       <header className="relative z-20 h-14 shrink-0 border-b border-border/40 bg-background/70 backdrop-blur-xl flex items-center px-4 gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-lg bg-primary/15 border border-primary/25 text-primary flex items-center justify-center">
+          <div className="size-8 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 border border-primary/30 text-primary flex items-center justify-center pulse-glow">
             <Bolt className="size-4" strokeWidth={2.4} />
           </div>
           <div className="leading-tight">
@@ -123,17 +124,20 @@ function Studio() {
                   </div>
                   <ul className="space-y-0.5">
                     {plugins.map((p) => (
-                      <li
-                        key={p.id}
-                        className="px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-muted/50 hover:text-foreground transition-colors cursor-default flex items-center justify-between group"
-                      >
-                        <span className="truncate">{p.name}</span>
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] uppercase font-medium border-border/50 text-muted-foreground/70 group-hover:text-primary group-hover:border-primary/30 transition-colors h-4 px-1"
+                      <li key={p.id}>
+                        <button
+                          type="button"
+                          onClick={() => emitLoadPlugin(p.id)}
+                          className="w-full text-left px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-primary/10 hover:text-foreground hover:ring-1 hover:ring-primary/30 active:scale-[0.98] transition-all flex items-center justify-between group"
                         >
-                          {p.format}
-                        </Badge>
+                          <span className="truncate">{p.name}</span>
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] uppercase font-medium border-border/50 text-muted-foreground/70 group-hover:text-primary group-hover:border-primary/40 transition-colors h-4 px-1"
+                          >
+                            {p.format}
+                          </Badge>
+                        </button>
                       </li>
                     ))}
                   </ul>
