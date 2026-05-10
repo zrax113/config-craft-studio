@@ -124,17 +124,20 @@ function Studio() {
                   </div>
                   <ul className="space-y-0.5">
                     {plugins.map((p) => (
-                      <li
-                        key={p.id}
-                        className="px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-muted/50 hover:text-foreground transition-colors cursor-default flex items-center justify-between group"
-                      >
-                        <span className="truncate">{p.name}</span>
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] uppercase font-medium border-border/50 text-muted-foreground/70 group-hover:text-primary group-hover:border-primary/30 transition-colors h-4 px-1"
+                      <li key={p.id}>
+                        <button
+                          type="button"
+                          onClick={() => emitLoadPlugin(p.id)}
+                          className="w-full text-left px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-primary/10 hover:text-foreground hover:ring-1 hover:ring-primary/30 active:scale-[0.98] transition-all flex items-center justify-between group"
                         >
-                          {p.format}
-                        </Badge>
+                          <span className="truncate">{p.name}</span>
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] uppercase font-medium border-border/50 text-muted-foreground/70 group-hover:text-primary group-hover:border-primary/40 transition-colors h-4 px-1"
+                          >
+                            {p.format}
+                          </Badge>
+                        </button>
                       </li>
                     ))}
                   </ul>
