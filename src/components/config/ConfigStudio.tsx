@@ -144,22 +144,48 @@ export function ConfigStudio() {
     };
   }, []);
 
-  // Keyboard shortcuts: Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo
+  // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       const inEditable =
         target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (inEditable) return;
       const mod = e.metaKey || e.ctrlKey;
-      if (!mod || e.key.toLowerCase() !== "z") return;
-      e.preventDefault();
-      if (e.shiftKey) editedHistory.redo();
-      else editedHistory.undo();
+      const k = e.key.toLowerCase();
+
+      // Global (work even when editing): ⌘S export, ⌘⇧C copy output
+      if (mod && k === "s") {
+        e.preventDefault();
+        if (yamlOut) {
+          downloadOut();
+          toast.success("Exported config");
+        }
+        return;
+      }
+      if (mod && e.shiftKey && k === "c") {
+        e.preventDefault();
+        if (yamlOut) {
+          copyOut();
+          toast.success("Copied to clipboard");
+        }
+        return;
+      }
+      if (inEditable) return;
+      if (mod && k === "z") {
+        e.preventDefault();
+        if (e.shiftKey) editedHistory.redo();
+        else editedHistory.undo();
+        return;
+      }
+      if (k === "?" || (e.shiftKey && k === "/")) {
+        e.preventDefault();
+        window.dispatchEvent(new Event("forgeyaml:open-tutorial"));
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editedHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yamlOut, editedHistory]);
 
   function update(path: string[], value: any) {
     editedHistory.set((prev: any) => setDeep(prev, path, value));
@@ -454,20 +480,21 @@ export function ConfigStudio() {
         icon={<Download className="size-4" />}
         delay={0.1}
         accessory={
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap justify-end">
             <Button
               size="sm"
               variant="ghost"
               onClick={copyOut}
               disabled={!yamlOut}
               className="h-8 px-2"
+              title="Copy (⌘⇧C)"
             >
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 {copied ? (
                   <motion.span
                     key="ok"
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    initial={{ scale: 0.6, opacity: 0, rotate: -20 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
                     exit={{ scale: 0.6, opacity: 0 }}
                   >
                     <Check className="size-4 text-success" />
@@ -492,16 +519,19 @@ export function ConfigStudio() {
                 className="h-8 px-2 text-xs"
                 title="Export every related file (config, messages, kits…)"
               >
-                <Package className="size-3.5 mr-1.5" /> Pack
+                <Package className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">Pack</span>
               </Button>
             )}
             <Button
               size="sm"
               onClick={downloadOut}
               disabled={!yamlOut}
-              className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="h-8 px-2 sm:px-3 bg-primary hover:bg-primary/90 text-primary-foreground"
+              title="Export (⌘S)"
             >
-              <Download className="size-3.5 mr-1.5" /> Export
+              <Download className="size-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         }
@@ -513,6 +543,15 @@ export function ConfigStudio() {
             <span className="text-muted-foreground/60">// your config will appear here</span>
           )}
         </pre>
+        {yamlOut && (
+          <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold px-1">
+            <span>{yamlOut.split("\n").length} lines</span>
+            <span className="opacity-40">·</span>
+            <span>{yamlOut.length.toLocaleString()} chars</span>
+            <span className="opacity-40">·</span>
+            <span>{(new Blob([yamlOut]).size / 1024).toFixed(1)} kb</span>
+          </div>
+        )}
         <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
     </div>
@@ -539,19 +578,20 @@ function Panel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0"
+      whileHover={{ borderColor: "transparent" }}
+      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
     >
-      <header className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/40">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <header className="flex items-center justify-between gap-2 flex-wrap pb-3 mb-3 border-b border-border/40">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
             {icon}
           </div>
-          <div className="min-w-0">
-            <h3 className="font-display text-sm font-semibold leading-tight">{title}</h3>
-            <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-sm font-semibold leading-tight truncate">{title}</h3>
+            <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>{subtitle}</p>
           </div>
         </div>
-        {accessory}
+        {accessory && <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">{accessory}</div>}
       </header>
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </motion.section>
