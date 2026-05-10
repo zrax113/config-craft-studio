@@ -28,6 +28,9 @@ import {
   Redo2,
   Package,
   AlertTriangle,
+  ClipboardPaste,
+  Files,
+  HelpCircle,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
