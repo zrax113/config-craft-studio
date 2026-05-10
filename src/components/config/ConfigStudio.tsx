@@ -452,7 +452,7 @@ export function ConfigStudio() {
                           className="underline decoration-dotted hover:text-primary"
                           onClick={async () => {
                             const s = await loadSample(c.id);
-                            if (s) applySample(s.content, s.format);
+                            if (s) applySample(s.content, s.format, c.id);
                           }}
                         >
                           {c.name}
