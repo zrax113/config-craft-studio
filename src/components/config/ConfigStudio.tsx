@@ -92,6 +92,7 @@ export function ConfigStudio() {
         });
       }
     });
+    return () => { off(); };
   }, []);
 
   function update(path: string[], value: any) {
