@@ -1,7 +1,7 @@
 // Extract every entry in src/lib/sample-configs.ts SAMPLES into
 // public/configs/<plugin>/<file> and build manifest.json.
-import { SAMPLES } from "./src/lib/sample-configs.ts";
-import { PLUGIN_LIST } from "./src/lib/plugin-detect.ts";
+import { SAMPLES } from "../src/lib/sample-configs.ts";
+import { PLUGIN_LIST } from "../src/lib/plugin-detect.ts";
 import fs from "node:fs";
 import path from "node:path";
 
