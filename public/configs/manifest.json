@@ -27,45 +27,115 @@
       "format": "yaml",
       "path": "essentialsx/kits.yml"
     },
+    "essentials_worth": {
+      "label": "EssentialsX · worth.yml",
+      "format": "yaml",
+      "path": "essentialsx/worth.yml"
+    },
     "tab": {
       "label": "TAB · config.yml",
       "format": "yaml",
       "path": "tab/config.yml"
+    },
+    "tab_animations": {
+      "label": "TAB · animations.yml",
+      "format": "yaml",
+      "path": "tab/animations.yml"
+    },
+    "tab_groups": {
+      "label": "TAB · groups.yml",
+      "format": "yaml",
+      "path": "tab/groups.yml"
+    },
+    "tab_messages": {
+      "label": "TAB · messages.yml",
+      "format": "yaml",
+      "path": "tab/messages.yml"
     },
     "velocity": {
       "label": "Velocity · velocity.toml",
       "format": "toml",
       "path": "velocity/velocity.toml"
     },
-    "paper": {
+    "bungeecord": {
+      "label": "BungeeCord · config.yml",
+      "format": "yaml",
+      "path": "bungeecord/config.yml"
+    },
+    "paper_global": {
       "label": "Paper · paper-global.yml",
       "format": "yaml",
       "path": "paper/paper-global.yml"
+    },
+    "paper_world_defaults": {
+      "label": "Paper · paper-world-defaults.yml",
+      "format": "yaml",
+      "path": "paper/paper-world-defaults.yml"
     },
     "deluxemenus": {
       "label": "DeluxeMenus · config.yml",
       "format": "yaml",
       "path": "deluxemenus/config.yml"
     },
+    "deluxemenus_actions": {
+      "label": "DeluxeMenus · actions_menu.yml",
+      "format": "yaml",
+      "path": "deluxemenus/actions_menu.yml"
+    },
+    "deluxemenus_advanced": {
+      "label": "DeluxeMenus · advanced_menu.yml",
+      "format": "yaml",
+      "path": "deluxemenus/advanced_menu.yml"
+    },
+    "deluxemenus_basics": {
+      "label": "DeluxeMenus · basics_menu.yml",
+      "format": "yaml",
+      "path": "deluxemenus/basics_menu.yml"
+    },
+    "deluxemenus_default": {
+      "label": "DeluxeMenus · default_menu.yml",
+      "format": "yaml",
+      "path": "deluxemenus/default_menu.yml"
+    },
     "worldguard": {
       "label": "WorldGuard · config.yml",
       "format": "yaml",
       "path": "worldguard/config.yml"
+    },
+    "worldborder": {
+      "label": "WorldBorder · config.yml",
+      "format": "yaml",
+      "path": "worldborder/config.yml"
+    },
+    "placeholderapi": {
+      "label": "PlaceholderAPI · config.yml",
+      "format": "yaml",
+      "path": "placeholderapi/config.yml"
+    },
+    "placeholderapi_placeholders": {
+      "label": "PlaceholderAPI · placeholders.yml",
+      "format": "yaml",
+      "path": "placeholderapi/placeholders.yml"
     },
     "discordsrv": {
       "label": "DiscordSRV · config.yml",
       "format": "yaml",
       "path": "discordsrv/config.yml"
     },
-    "bungeecord": {
-      "label": "BungeeCord · config.yml",
+    "discordsrv_alerts": {
+      "label": "DiscordSRV · alerts.yml",
       "format": "yaml",
-      "path": "bungeecord/config.yml"
+      "path": "discordsrv/alerts.yml"
     },
-    "placeholderapi": {
-      "label": "PlaceholderAPI · config.yml",
+    "discordsrv_linking": {
+      "label": "DiscordSRV · linking.yml",
       "format": "yaml",
-      "path": "placeholderapi/config.yml"
+      "path": "discordsrv/linking.yml"
+    },
+    "discordsrv_messages": {
+      "label": "DiscordSRV · messages.yml",
+      "format": "yaml",
+      "path": "discordsrv/messages.yml"
     },
     "geyser": {
       "label": "Geyser · config.yml",
@@ -83,7 +153,7 @@
       "path": "viaversion/config.yml"
     },
     "multiverse": {
-      "label": "Multiverse-Core · config.yml",
+      "label": "Multiverse · config.yml",
       "format": "yaml",
       "path": "multiverse/config.yml"
     },
@@ -107,10 +177,10 @@
       "format": "yaml",
       "path": "jobs/generalConfig.yml"
     },
-    "worldborder": {
-      "label": "WorldBorder · config.yml",
+    "worldguard_core": {
+      "label": "WorldGuard · config.yml",
       "format": "yaml",
-      "path": "worldborder/config.yml"
+      "path": "worldguard/config.yml"
     },
     "authme": {
       "label": "AuthMe · config.yml",
@@ -152,30 +222,30 @@
       "format": "yaml",
       "path": "factions/config.yml"
     },
-    "papimacros": {
-      "label": "Custom · placeholders.yml",
+    "paper": {
+      "label": "Paper · paper-global.yml",
       "format": "yaml",
-      "path": "placeholderapi/placeholders.yml"
+      "path": "paper/paper-global.yml"
     },
-    "essentials_worth": {
-      "label": "EssentialsX · worth.yml",
+    "economy": {
+      "label": "Economy · economy.yml",
       "format": "yaml",
-      "path": "essentialsx/worth.yml"
+      "path": "configs/economy.yml"
     },
-    "essentials_spawns": {
-      "label": "EssentialsX · spawn.yml",
+    "effects": {
+      "label": "Effects · effects.yml",
       "format": "yaml",
-      "path": "essentialsx/spawn.yml"
+      "path": "configs/effects.yml"
     },
-    "tab_messages": {
-      "label": "TAB · messages.yml",
+    "ideas": {
+      "label": "Ideas · ideas.yml",
       "format": "yaml",
-      "path": "tab/messages.yml"
+      "path": "configs/ideas.yml"
     },
-    "discordsrv_messages": {
-      "label": "DiscordSRV · messages.yml",
+    "locations": {
+      "label": "Locations · locations.yml",
       "format": "yaml",
-      "path": "discordsrv/messages.yml"
+      "path": "configs/locations.yml"
     },
     "spigot": {
       "label": "Spigot · spigot.yml",
