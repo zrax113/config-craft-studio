@@ -310,13 +310,14 @@ export function ConfigStudio() {
           </div>
         }
       >
-        <pre className="flex-1 overflow-auto rounded-xl bg-background/70 border border-border/60 p-4 text-xs font-mono leading-relaxed text-foreground/90 min-h-0">
+        <pre ref={outputScrollRef} className="flex-1 overflow-auto rounded-xl bg-background/70 border border-border/60 p-4 text-xs font-mono leading-relaxed text-foreground/90 min-h-0">
           {yamlOut ? (
             <SyntaxLines text={yamlOut} format={format} />
           ) : (
             <span className="text-muted-foreground/60">// your config will appear here</span>
           )}
         </pre>
+        <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
     </div>
   );
