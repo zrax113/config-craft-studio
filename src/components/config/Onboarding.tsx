@@ -36,6 +36,12 @@ export function Onboarding() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!localStorage.getItem(KEY)) setOpen(true);
+    function reopen() {
+      setStep(0);
+      setOpen(true);
+    }
+    window.addEventListener("forgeyaml:open-tutorial", reopen);
+    return () => window.removeEventListener("forgeyaml:open-tutorial", reopen);
   }, []);
 
   function close() {
