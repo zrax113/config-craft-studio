@@ -242,7 +242,7 @@ export function ConfigStudio() {
           ) : null
         }
       >
-        <div className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
+        <div ref={editorScrollRef} className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
           {!edited ? (
             <EmptyState />
           ) : (
@@ -259,6 +259,7 @@ export function ConfigStudio() {
             </motion.div>
           )}
         </div>
+        <ScrollToTop targetRef={editorScrollRef} />
       </Panel>
 
       {/* Output panel */}
