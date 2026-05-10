@@ -1,50 +1,56 @@
-player_limit: -1
 ip_forward: true
-permissions:
-  default:
-    - bungeecord.command.server
-    - bungeecord.command.list
-  admin:
-    - bungeecord.command.alert
-    - bungeecord.command.end
-    - bungeecord.command.ip
-    - bungeecord.command.reload
+network_compression_threshold: 256
+stats: cb845839-3ba0-4a52-b9f2-171eec10794b
 groups:
   md_5:
-    - admin
-timeout: 30000
-log_commands: false
-log_pings: true
-network_compression_threshold: 256
-online_mode: true
-forge_support: false
-disabled_commands:
-  - disabledcommandhere
+  - admin
+  Heinz007:
+  - admin
 servers:
   lobby:
     motd: '&1Just another BungeeCord - Forced Host'
-    address: localhost:25565
+    address: lobbyadress
     restricted: false
+  smp:
+    motd: '&1SMP server using slimefun'
+    address: smpadress
+    restricted: false
+  moba:
+    motd: '&1Moba Server'
+    address: mobaadress
+    restricted: false
+timeout: 30000
+player_limit: -1
 listeners:
-  - host: 0.0.0.0:25577
-    motd: '&aA Minecraft Server'
-    max_players: 1000
-    priorities:
-      - lobby
-    bind_local_address: true
-    ping_passthrough: false
-    forced_hosts:
-      pvp.md-5.net: pvp
-    tab_list: GLOBAL_PING
-    tab_size: 60
-    query_port: 25577
-    query_enabled: false
-    proxy_protocol: false
-    force_default_server: false
-connection_throttle: 4000
-connection_throttle_limit: 3
-stats: replace-with-uuid
+- query_port: 25577
+  motd: '&1Another Bungee server'
+  tab_list: GLOBAL_PING
+  query_enabled: false
+  proxy_protocol: false
+  forced_hosts:
+    pvp.md-5.net: pvp
+  ping_passthrough: false
+  priorities:
+  - lobby
+  - moba
+  - smp
+  bind_local_address: true
+  host: 0.0.0.0:25577
+  max_players: 1
+  tab_size: 60
+  force_default_server: false
 prevent_proxy_connections: false
-remote_ping_cache: -1
-forge_support: false
-inject_commands: false
+permissions:
+  default:
+  - bungeecord.command.server
+  - bungeecord.command.list
+  admin:
+  - bungeecord.command.alert
+  - bungeecord.command.end
+  - bungeecord.command.ip
+  - bungeecord.command.reload
+online_mode: false
+log_commands: false
+disabled_commands:
+- disabledcommandhere
+connection_throttle: -1
