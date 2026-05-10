@@ -1,0 +1,54 @@
+DataSource:
+  backend: SQLITE
+  caching: true
+  mySQLHost: 127.0.0.1
+  mySQLPort: '3306'
+  mySQLUsername: authme
+  mySQLPassword: '12345'
+  mySQLDatabase: authme
+  mySQLTablename: authme
+settings:
+  sessions:
+    enabled: false
+    timeout: 10
+    sessionExpireOnIpChange: true
+  restrictions:
+    AllowedNicknameCharacters: '[a-zA-Z0-9_]*'
+    minNicknameLength: 3
+    maxNicknameLength: 16
+    timeout: 30
+    maxRegPerIp: 1
+    forceSingleSession: true
+    maxLoginPerIp: 0
+    maxJoinPerIp: 0
+    teleportUnAuthedToSpawn: false
+    allowMovement: false
+    allowedMovementRadius: 100
+    removeSpeed: true
+  registration:
+    enabled: true
+    type: PASSWORD
+    secondArg: CONFIRMATION
+    forceKickAfterRegister: false
+    enableEmailRegistrationSystem: false
+  security:
+    minPasswordLength: 5
+    passwordMaxLength: 30
+    unsafePasswords:
+      - '123456'
+      - password
+      - qwerty
+    captcha:
+      enabled: false
+      maxLoginTry: 5
+      captchaLength: 5
+  forceCommands: []
+Email:
+  mailSMTP: smtp.gmail.com
+  mailPort: 465
+  mailSenderName: ''
+  mailAccount: ''
+  mailPassword: ''
+  recoveryPasswordLength: 8
+  emailMessage: '<html><body><h2>Hello {player},</h2></body></html>'
+  emailSubject: 'Your AuthMe password'

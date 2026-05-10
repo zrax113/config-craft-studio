@@ -1,0 +1,35 @@
+multiverse-configuration:
+  enforceaccess: false
+  enforcegamemode: true
+  prefixchat: true
+  prefixchatformat: '[%world%]%chat%'
+  teleportintercept: true
+  firstspawnoverride: true
+  displaypermerrors: true
+  globaldebug: 0
+  silentstart: false
+  defaultportalsearch: true
+  portalsearchradius: 128
+  autopurge: true
+  idonotwanttodonate: false
+  firstspawnworld: ''
+  defaulttoflatworld: false
+
+worlds:
+  world:
+    autoLoad: true
+    bedRespawn: true
+    difficulty: NORMAL
+    gameMode: SURVIVAL
+    hidden: false
+    keepSpawnInMemory: true
+    pvp: true
+    type: NORMAL
+    seed: 12345
+    spawnLocation:
+      ==: MVSpawnLocation
+      x: 0.0
+      y: 64.0
+      z: 0.0
+      pitch: 0.0
+      yaw: 0.0

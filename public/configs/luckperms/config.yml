@@ -1,0 +1,82 @@
+server: global
+sync-minutes: 0
+watch-files: true
+
+storage-method: H2
+data:
+  address: localhost
+  database: minecraft
+  username: root
+  password: ''
+  pool-settings:
+    maximum-pool-size: 10
+    minimum-idle: 10
+    maximum-lifetime: 1800000
+    keepalive-time: 0
+    connection-timeout: 5000
+    properties:
+      useUnicode: true
+      characterEncoding: utf8
+  table-prefix: 'luckperms_'
+
+split-storage:
+  enabled: false
+  methods:
+    user: h2
+    group: h2
+    track: h2
+    uuid: h2
+    log: h2
+
+messaging-service: auto
+auto-install-translations: true
+
+use-server-uuids: true
+use-bukkit-connection-throttle: false
+use-vault-server: global
+vault-unsafe-lookups: false
+vault-group-use-displaynames: true
+vault-primary-groups-overrides:
+  enabled: false
+  list:
+    - default
+vault-numeric-priority: true
+vault-debug: false
+
+primary-group-calculation: stored
+group-name-rewrite: {}
+group-weight: {}
+
+meta-formatting:
+  prefix:
+    format: highest
+    duplicates: first-only
+    separator: ''
+    start-spacer: ''
+    end-spacer: ''
+  suffix:
+    format: highest
+    duplicates: first-only
+    separator: ''
+    start-spacer: ''
+    end-spacer: ''
+
+log-synchronously-in-commands: false
+commands-allow-op: true
+disabled-contexts: []
+require-sender-group-membership-to-modify: false
+
+inheritance-traversal-algorithm: depth-first-pre-order
+post-traversal-inheritance-sort: none
+
+prevent-primary-group-removal: false
+argument-based-command-permissions: false
+require-sender-group-membership-to-modify-self: false
+
+resolve-command-selectors: false
+register-shorthand-commands: true
+
+log-notify: true
+auto-op: false
+enable-ops: true
+commands-rate-limit: false

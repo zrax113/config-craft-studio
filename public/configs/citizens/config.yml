@@ -1,0 +1,32 @@
+general:
+  date-format: MM/dd/yyyy
+  debug: false
+  default-text: Hello, I''m <npc>
+  selection:
+    item: stick
+    message: '<gray>You selected <green><npc>.'
+    quick-select: false
+  use-scoreboard-teams: true
+  player-skins:
+    follow-when-cleared: true
+    refresh-on-skin-update: true
+npc:
+  default-look-close: false
+  default-random-look: false
+  default-protected: true
+  pathfinding:
+    new-finder: true
+    new-finder-distance-margin: 1.0
+    update-path-rate: 1
+  packets:
+    update-delay: 30
+storage:
+  files:
+    saves: saves.yml
+  type: yaml
+tasks:
+  save-task:
+    delay: 0
+    period: 6000
+languages: en
+metrics: true

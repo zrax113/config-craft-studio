@@ -1,0 +1,44 @@
+locale-language: en-US
+storage:
+  method: sqlite
+  database:
+    name: jobs
+    username: jobs
+    password: jobs
+    host: localhost
+    port: 3306
+    multiple-servers: false
+broadcast-on-skill-up:
+  use: true
+broadcast-on-level-up:
+  use: true
+economy:
+  currency-symbol: '$'
+  use-server-economy: true
+add-xp-player: true
+auto-job-join: false
+fire-cancelled-events: false
+modify-chat: true
+max-jobs: 3
+hide-jobs-in-info: []
+hide-jobsinfo-without-permission: true
+enable-pay-near-spawner: true
+enable-pay-creative: false
+disable-payment-if-riding: false
+enable-pay-for-exploring: true
+disable-payment-if-mob-spawner: true
+mob-tp-payment-percentage: 75
+enable-pay-creative: false
+modify-chat-prefix: ' '
+modify-chat-suffix: ' '
+ShowToplistInScoreboard: true
+add-xp-player: true
+modify-displayname: false
+General:
+  EnablePayCreative: false
+  EnablePayNearSpawner: true
+  AutoSavePeriod: 30
+  ShowTotalWorkers: false
+  ShowPenaltyBonus: true
+  AddXpPlayer: false
+ScoreboardInterval: 10

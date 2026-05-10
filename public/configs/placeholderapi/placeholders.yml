@@ -1,0 +1,5 @@
+# Generic placeholder definitions
+placeholders:
+  greeting: '&aHello, &f%player_name%&a!'
+  rank_prefix: '%vault_prefix%'
+  ping_color: '%player_ping_color%%player_ping%ms'

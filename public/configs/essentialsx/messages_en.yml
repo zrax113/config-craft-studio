@@ -1,7 +1,14 @@
-# EssentialsX — messages_en.yml (excerpt)
+# EssentialsX messages
 noPerm: '\u00a74You do not have permission to access that command.'
 noAccessCommand: '\u00a74You do not have access to that command.'
 noAccessPermission: '\u00a74You do not have permission to access \u00a7c{0}\u00a74.'
+noKitGroup: '\u00a74You do not have permission to use that kit.'
+noKitPermission: '\u00a74You need the \u00a7c{0}\u00a74 permission to use this kit.'
+
+alertFormat: '\u00a73[\u00a7c{0}\u00a73][\u00a7a{1}\u00a73] \u00a7f{2}'
+alertBroke: 'broke:'
+alertPlaced: 'placed:'
+alertUsed: 'used:'
 
 balance: '\u00a7aBalance:\u00a7c {0}'
 balanceOther: '\u00a7aBalance of {0}:\u00a7c {1}'
@@ -10,16 +17,21 @@ balanceTop: '\u00a76Top balances ({0})'
 teleport: '\u00a76Teleporting...'
 teleportAtoB: '\u00a76{0}\u00a76 teleported you to {1}\u00a76.'
 teleportToPlayer: '\u00a76Teleporting to \u00a7c{0}\u00a76.'
+teleportationDisabled: '\u00a76Teleportation disabled.'
+teleportationEnabled: '\u00a76Teleportation enabled.'
 
 requestSent: '\u00a76Request sent to \u00a7c{0}\u00a76.'
 requestAccepted: '\u00a76Teleport request accepted.'
 requestDenied: '\u00a76Teleport request denied.'
+requestTimedOut: '\u00a76Teleport request has timed out.'
 
 kitGiven: '\u00a76Giving kit \u00a7c{0}\u00a76.'
+kitTimed: '\u00a74You can''t use that kit again for another \u00a7c{0}\u00a74.'
 kitNotFound: '\u00a74That kit does not exist.'
 
 homes: '\u00a76Homes: {0}'
 homeSet: '\u00a76Home set to current location.'
+homeSetToBed: '\u00a76Your home is now set to this bed.'
 deleteHome: '\u00a76Home \u00a7c{0}\u00a76 has been removed.'
 
 warps: '\u00a76Warps: {0}'
@@ -28,10 +40,25 @@ warpingTo: '\u00a76Warping to \u00a7c{0}\u00a76.'
 
 moneyTaken: '\u00a7c{0}\u00a76 has been taken from your account.'
 moneyAdded: '\u00a7a{0}\u00a76 has been given to {1}.'
+moneyRecievedFrom: '\u00a7a{0} has been received from {1}'
+moneySentTo: '\u00a7a{0} has been sent to {1}'
 insufficientFunds: '\u00a74Insufficient funds.'
 
 playerMuted: '\u00a76You have been muted'
 playerUnmuted: '\u00a76You are no longer muted'
+playerBanned: '\u00a74Player {0} banned {1} for {2}'
+playerKicked: '\u00a74Player {0} kicked {1} for {2}'
+
+day: day
+days: days
+hour: hour
+hours: hours
+minute: minute
+minutes: minutes
+second: second
+seconds: seconds
+year: year
+years: years
 
 unknownCommand: '\u00a74Unknown command. Type "/help" for help.'
 errorWithMessage: '\u00a74Error: {0}'

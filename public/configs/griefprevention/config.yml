@@ -1,0 +1,83 @@
+GriefPrevention:
+  Database:
+    URL: ''
+    UserName: ''
+    Password: ''
+  Claims:
+    PreventTheft: true
+    ProtectCreatures: true
+    PreventButtonsSwitches: true
+    LockWoodenDoors: true
+    LockTrapDoors: true
+    LockFenceGates: true
+    EnderPearlsRequireAccessTrust: true
+    PreventNonPlayerCreatedPortals: true
+    LecternReadingRequiresAccessTrust: true
+    ProtectFires: false
+    ProtectHorses: true
+    ProtectDonkeysAndMules: true
+    ProtectLlamas: true
+    InitialBlocks: 100
+    BlocksAccruedPerHour:
+      Default: 100
+    MaxAccruedBlocks:
+      Default: 80000
+    AccruedIdleThreshold: 0
+    AccruedIdlePercent: 0
+    AbandonReturnRatio: 1.0
+    AutomaticNewPlayerClaimsRadius: 4
+    AutomaticNewPlayerClaimsRadiusMinimum: 0
+    ExtendIntoGroundDistance: 5
+    MinimumWidth: 5
+    MinimumArea: 100
+    MaximumDepth: 0
+    InvestigationTool: STICK
+    ModificationTool: GOLDEN_SHOVEL
+    Expiration:
+      ChestClaimDays: 7
+      UnusedClaimDays: 14
+      AllClaims:
+        DaysInactive: 60
+        IgnoreIfAbove: 0
+        SkipBuilderClaims: true
+    Siege:
+      Worlds: []
+      BreakableBlocks:
+        - DIRT
+        - GRASS_BLOCK
+        - COBBLESTONE
+      WinningTeleportsLoser: true
+      LoserKeepsInventory: true
+  Spam:
+    Enabled: true
+    LoginCooldownSeconds: 60
+    LoginLogoutNotificationsPerMinute: 5
+    WarningMessage: 'Please slow down.'
+    BanOffenders: false
+    BanMessage: 'Banned for spam.'
+    AllowedIpAddresses: ''
+    DeathMessageCooldownSeconds: 60
+  PvP:
+    RulesEnabledInWorld:
+      world: true
+    ProtectFreshSpawns: true
+    PunishLogout: true
+    CombatTimeoutSeconds: 15
+    AllowCombatItemDrop: false
+    BlockedSlashCommands: 'me,tell,msg,r,whisper,t'
+    ProtectPlayersInLandClaims:
+      PlayerOwnedClaims: true
+      AdministrativeClaims: true
+      AdministrativeSubdivisions: true
+  Economy:
+    ClaimBlocksPurchaseCost: 0.0
+    ClaimBlocksSellValue: 0.0
+  ProtectItemsDroppedOnDeath:
+    Worlds: {}
+  BlockLandClaimsInWorlds: []
+  BlockSurfaceCreeperExplosions: true
+  BlockSurfaceOtherExplosions: true
+  BlockSkyTrees: true
+  LimitTreeGrowth: false
+  PistonExplosionSound: true
+  PistonMovement: BREAK

@@ -1,0 +1,28 @@
+sql:
+  driver: sqlite
+  address: localhost:3306
+  database: litebans
+  username: root
+  password: ''
+  table_prefix: 'litebans_'
+  table_engine: InnoDB
+  use_ssl: false
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 10
+    maximum-lifetime: 1800000
+    connection-timeout: 5000
+messages:
+  prefix: '&8[&cLiteBans&8]'
+  ban: '&cYou have been banned. Reason: {reason}'
+  mute: '&cYou are muted. Reason: {reason}'
+broadcasts:
+  ban: '&c{actor} &7banned &c{player} &7for &c{reason}'
+  unban: '&a{actor} &7unbanned &a{player}'
+history:
+  enabled: true
+  page_size: 7
+litebans:
+  ban-on-player-ip: false
+  hooks:
+    discord: false

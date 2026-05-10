@@ -1,0 +1,44 @@
+prefix: '&7[&bLP&7] '
+
+command-not-recognised: '&cCommand not recognised.'
+command-no-permission: '&cYou do not have permission to use this command.'
+no-permission-for-subcommands: '&cYou do not have permission to use any sub commands.'
+
+first-time-setup: |
+  &b&l>  &bRun &h/&blp createGroup admin&7 to create your first group.
+  &7Then add yourself with &h/lp user <name> parent set admin&7.
+
+user-not-found: '&cA user for &b{0}&c could not be found.'
+user-not-online: '&cUser &b{0}&c is not online.'
+user-invalid-entry: '&b{0}&c is not a valid username/uuid.'
+
+group-not-found: '&cA group named &b{0}&c could not be found.'
+track-not-found: '&cA track named &b{0}&c could not be found.'
+
+user-info:
+  general: |-
+    &b&l> &bUser Info: &f{0}
+    &7- &fUUID:    &b{1}
+    &7    &7(type: &8{2}&7)
+    &7- &fStatus:  {3}
+    &7- &fPrimary Group: &b{4}
+  contextual-data:
+    header: '&f- &aContextual Data:'
+    prefix: '&f-    &3Prefix: {0}'
+    suffix: '&f-    &3Suffix: {0}'
+    meta: '&f-    &3Meta: {0}'
+
+group-info:
+  general: |-
+    &b&l> &bGroup Info: &f{0}
+    &7- &fDisplay Name:  &b{1}
+    &7- &fWeight:        &b{2}
+    &7- &fContextual Data: &b{3}
+  contextual-data:
+    prefix: '&f-     &3Prefix: {0}'
+    suffix: '&f-     &3Suffix: {0}'
+
+setperm-success: '&aSet &b{0}&a to &b{1}&a for &b{2}&a in context {3}&a.'
+unsetperm-success: '&aUnset &b{0}&a for &b{1}&a in context {2}&a.'
+setparent-success: '&b{0}&a had their primary group set to &b{1}&a in context {2}&a.'
+unsetparent-success: '&b{0}&a no longer inherits &b{1}&a in context {2}&a.'

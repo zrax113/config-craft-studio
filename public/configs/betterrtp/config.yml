@@ -1,0 +1,29 @@
+Settings:
+  Cooldown: 5
+  Delay: 0
+  WaitTimeBeforeTeleport: 0
+  CrossWorldTPSupport: false
+  CommandsOnTeleport:
+    - 'msg [player] &aYou have been teleported!'
+RTP:
+  DefaultWorld: world
+  MaxAttempts: 50
+  PriceToUse: 0
+  Permissions:
+    Cooldown: 5
+  CenterX: 0
+  CenterZ: 0
+  MinX: -3000
+  MaxX: 3000
+  MinZ: -3000
+  MaxZ: 3000
+  Shape: SQUARE
+  AvoidBiomes:
+    - OCEAN
+    - DEEP_OCEAN
+    - RIVER
+  AvoidBlocks:
+    - WATER
+    - LAVA
+    - CACTUS
+  UseWorldBorder: true

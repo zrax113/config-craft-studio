@@ -1,0 +1,10 @@
+# TAB messages.yml
+reload-success: '&2Successfully reloaded'
+reload-fail: '&cFailed to reload, check console for errors.'
+data-removed: '&aData has been removed'
+unknown-command: '&cUnknown command. Try /tab help'
+no-permission: '&cYou do not have permission to perform this command'
+unlimited-nametags-not-enabled: '&cThis feature is disabled in config.'
+player-not-online: '&cPlayer &e{0}&c is not online'
+invalid-number: '&cInvalid number: &e{0}'
+group-not-found: '&cGroup &e{0}&c was not found'
