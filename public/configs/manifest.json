@@ -156,6 +156,31 @@
       "label": "Custom · placeholders.yml",
       "format": "yaml",
       "path": "placeholderapi/placeholders.yml"
+    },
+    "essentials_worth": {
+      "label": "EssentialsX · worth.yml",
+      "format": "yaml",
+      "path": "essentialsx/worth.yml"
+    },
+    "essentials_spawns": {
+      "label": "EssentialsX · spawn.yml",
+      "format": "yaml",
+      "path": "essentialsx/spawn.yml"
+    },
+    "tab_messages": {
+      "label": "TAB · messages.yml",
+      "format": "yaml",
+      "path": "tab/messages.yml"
+    },
+    "discordsrv_messages": {
+      "label": "DiscordSRV · messages.yml",
+      "format": "yaml",
+      "path": "discordsrv/messages.yml"
+    },
+    "spigot": {
+      "label": "Spigot · spigot.yml",
+      "format": "yaml",
+      "path": "spigot/spigot.yml"
     }
   }
 }
