@@ -269,17 +269,35 @@ export function ConfigStudio() {
         icon={<Sparkles className="size-4" />}
         delay={0.05}
         accessory={
-          cfg.studio.showPluginBadge && detection && detection.id !== "unknown" ? (
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              key={detection.id}
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              onClick={editedHistory.undo}
+              disabled={!editedHistory.canUndo}
+              title="Undo (⌘Z)"
             >
-              <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
-                {detection.category}
-              </Badge>
-            </motion.div>
-          ) : null
+              <Undo2 className="size-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              onClick={editedHistory.redo}
+              disabled={!editedHistory.canRedo}
+              title="Redo (⌘⇧Z)"
+            >
+              <Redo2 className="size-3.5" />
+            </Button>
+            {cfg.studio.showPluginBadge && detection && detection.id !== "unknown" && (
+              <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={detection.id}>
+                <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
+                  {detection.category}
+                </Badge>
+              </motion.div>
+            )}
+          </div>
         }
       >
         <div ref={editorScrollRef} className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
