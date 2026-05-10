@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 
 export interface BrandConfig {
   brand: { name: string; tagline: string; accentHue: number; accentChroma: number };
-  pricing: { price: string; compareAt: string; ctaLabel: string };
   studio: { showSamples: boolean; showPluginBadge: boolean; defaultFormat: "auto" | "yaml" | "toml" | "json" };
 }
 
 const DEFAULT: BrandConfig = {
-  brand: { name: "ForgeYAML", tagline: "Visual config studio for Minecraft plugins", accentHue: 142, accentChroma: 0.19 },
-  pricing: { price: "$5.97", compareAt: "$24", ctaLabel: "Get lifetime access" },
+  brand: { name: "ForgeYAML", tagline: "Visual config studio for Minecraft plugins", accentHue: 285, accentChroma: 0.13 },
   studio: { showSamples: true, showPluginBadge: true, defaultFormat: "auto" },
 };
 
@@ -22,14 +20,18 @@ export function useBrandConfig(): BrandConfig {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) return;
-        const merged = { ...DEFAULT, ...data, brand: { ...DEFAULT.brand, ...data.brand }, pricing: { ...DEFAULT.pricing, ...data.pricing }, studio: { ...DEFAULT.studio, ...data.studio } };
+        const merged = {
+          ...DEFAULT,
+          ...data,
+          brand: { ...DEFAULT.brand, ...data.brand },
+          studio: { ...DEFAULT.studio, ...data.studio },
+        };
         cache = merged;
         setCfg(merged);
-        // Apply accent dynamically
         const root = document.documentElement;
-        root.style.setProperty("--primary", `oklch(0.82 ${merged.brand.accentChroma} ${merged.brand.accentHue})`);
-        root.style.setProperty("--ring", `oklch(0.82 ${merged.brand.accentChroma} ${merged.brand.accentHue})`);
-        root.style.setProperty("--glow", `oklch(0.82 ${merged.brand.accentChroma} ${merged.brand.accentHue} / 0.4)`);
+        root.style.setProperty("--primary", `oklch(0.74 ${merged.brand.accentChroma} ${merged.brand.accentHue})`);
+        root.style.setProperty("--ring", `oklch(0.74 ${merged.brand.accentChroma} ${merged.brand.accentHue})`);
+        root.style.setProperty("--glow", `oklch(0.74 ${merged.brand.accentChroma} ${merged.brand.accentHue} / 0.32)`);
       })
       .catch(() => {});
   }, []);
