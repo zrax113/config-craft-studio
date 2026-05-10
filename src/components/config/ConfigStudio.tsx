@@ -139,7 +139,8 @@ export function ConfigStudio() {
       const meta = PLUGIN_LIST.find((p) => p.id === id);
       const sample = await loadSample(id);
       if (sample) {
-        applySample(sample.content, sample.format);
+        applySample(sample.content, sample.format, id);
+        setPackIds(null);
         toast.success(`Loaded ${sample.label}`, {
           description: "Default config inserted — edit & export.",
         });
@@ -149,8 +150,12 @@ export function ConfigStudio() {
         });
       }
     });
+    const offPack = onLoadPack((ids) => {
+      setPackIds(ids);
+    });
     return () => {
       off();
+      offPack();
     };
   }, []);
 
