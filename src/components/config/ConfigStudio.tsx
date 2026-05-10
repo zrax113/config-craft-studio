@@ -417,6 +417,15 @@ export function ConfigStudio() {
             >
               <Redo2 className="size-3.5" />
             </Button>
+            {stats && (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-mono border-border/50 text-muted-foreground hidden md:inline-flex"
+                title={`${stats.keys} keys · depth ${stats.depth} · ${stats.leaves} leaves`}
+              >
+                {stats.keys}k · d{stats.depth}
+              </Badge>
+            )}
             {cfg.studio.showPluginBadge && detection && detection.id !== "unknown" && (
               <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={detection.id}>
                 <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
