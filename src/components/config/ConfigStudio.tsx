@@ -79,19 +79,19 @@ export function ConfigStudio() {
     }
   }, [edited, format]);
 
-  function loadSample(content: string, fmt: "yaml" | "toml") {
+  function applySample(content: string, fmt: "yaml" | "toml" | "json") {
     setFormat(fmt);
     setFilename(undefined);
     setRaw(content);
   }
 
-  // Listen for sidebar plugin clicks
+  // Listen for sidebar plugin clicks — uses the public/configs override system
   useEffect(() => {
-    const off = onLoadPlugin((id) => {
-      const sample = SAMPLES[id];
+    const off = onLoadPlugin(async (id) => {
       const meta = PLUGIN_LIST.find((p) => p.id === id);
+      const sample = await loadSample(id);
       if (sample) {
-        loadSample(sample.content, sample.format);
+        applySample(sample.content, sample.format);
         toast.success(`Loaded ${sample.label}`, {
           description: "Default config inserted — edit & export.",
         });
@@ -101,7 +101,9 @@ export function ConfigStudio() {
         });
       }
     });
-    return () => { off(); };
+    return () => {
+      off();
+    };
   }, []);
 
   // Keyboard shortcuts: Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo
