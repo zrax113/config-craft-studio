@@ -4,7 +4,7 @@ import { ArrowUp } from "lucide-react";
 
 interface Props {
   /** Ref to scrollable element */
-  targetRef: React.RefObject<HTMLElement>;
+  targetRef: React.RefObject<HTMLElement | null>;
   threshold?: number;
 }
 
