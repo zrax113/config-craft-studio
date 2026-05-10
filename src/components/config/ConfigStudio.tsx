@@ -148,8 +148,6 @@ export function ConfigStudio() {
     editedHistory.reset(null);
     setFilename(undefined);
   }
-    setFilename(undefined);
-  }
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] h-full">
