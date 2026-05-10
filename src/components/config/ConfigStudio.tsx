@@ -7,6 +7,7 @@ import { detectPlugin, type DetectionResult } from "@/lib/plugin-detect";
 import { SAMPLE_LIST } from "@/lib/sample-configs";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
+import { ScrollToTop } from "./ScrollToTop";
 import {
   Check,
   Copy,
@@ -38,6 +39,8 @@ export function ConfigStudio() {
   const [filename, setFilename] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const editorScrollRef = useRef<HTMLDivElement>(null);
+  const outputScrollRef = useRef<HTMLPreElement>(null);
 
   const parsed = useMemo(() => parseConfig(raw), [raw]);
   const detection: DetectionResult | null = useMemo(() => {
@@ -239,7 +242,7 @@ export function ConfigStudio() {
           ) : null
         }
       >
-        <div className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
+        <div ref={editorScrollRef} className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
           {!edited ? (
             <EmptyState />
           ) : (
@@ -256,6 +259,7 @@ export function ConfigStudio() {
             </motion.div>
           )}
         </div>
+        <ScrollToTop targetRef={editorScrollRef} />
       </Panel>
 
       {/* Output panel */}
@@ -306,13 +310,14 @@ export function ConfigStudio() {
           </div>
         }
       >
-        <pre className="flex-1 overflow-auto rounded-xl bg-background/70 border border-border/60 p-4 text-xs font-mono leading-relaxed text-foreground/90 min-h-0">
+        <pre ref={outputScrollRef} className="flex-1 overflow-auto rounded-xl bg-background/70 border border-border/60 p-4 text-xs font-mono leading-relaxed text-foreground/90 min-h-0">
           {yamlOut ? (
             <SyntaxLines text={yamlOut} format={format} />
           ) : (
             <span className="text-muted-foreground/60">// your config will appear here</span>
           )}
         </pre>
+        <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
     </div>
   );
@@ -338,7 +343,7 @@ function Panel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass rounded-2xl p-4 flex flex-col min-h-[60vh]"
+      className="glass rounded-2xl p-4 flex flex-col min-h-[60vh] relative"
     >
       <header className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/40">
         <div className="flex items-center gap-2.5 min-w-0">

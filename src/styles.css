@@ -40,52 +40,51 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 
-  --shadow-glow: 0 0 60px -10px var(--glow);
-  --shadow-card: 0 1px 0 0 oklch(1 0 0 / 4%) inset, 0 20px 40px -20px oklch(0 0 0 / 50%);
+  --shadow-glow: 0 0 50px -12px var(--glow);
+  --shadow-card: 0 1px 0 0 oklch(1 0 0 / 4%) inset, 0 16px 32px -20px oklch(0 0 0 / 60%);
 
-  --gradient-hero: radial-gradient(ellipse at top, oklch(0.7 0.2 145 / 0.15), transparent 60%);
-  --gradient-accent: linear-gradient(135deg, oklch(0.78 0.18 145), oklch(0.7 0.2 175));
+  --gradient-accent: linear-gradient(135deg, oklch(0.72 0.13 285), oklch(0.78 0.10 265));
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.7rem;
 
-  /* Premium dark — deep emerald-tinted obsidian with neon-lime accent */
-  --background: oklch(0.16 0.015 160);
-  --foreground: oklch(0.97 0.01 150);
+  /* Minimal modern — neutral graphite with soft lavender accent */
+  --background: oklch(0.155 0.006 270);
+  --foreground: oklch(0.96 0.005 270);
 
-  --card: oklch(0.20 0.02 160);
-  --card-foreground: oklch(0.97 0.01 150);
+  --card: oklch(0.195 0.008 270);
+  --card-foreground: oklch(0.96 0.005 270);
 
-  --popover: oklch(0.18 0.02 160);
-  --popover-foreground: oklch(0.97 0.01 150);
+  --popover: oklch(0.18 0.008 270);
+  --popover-foreground: oklch(0.96 0.005 270);
 
-  --primary: oklch(0.82 0.19 142);
-  --primary-foreground: oklch(0.18 0.04 160);
+  --primary: oklch(0.74 0.13 285);
+  --primary-foreground: oklch(0.16 0.02 270);
 
-  --secondary: oklch(0.26 0.02 160);
-  --secondary-foreground: oklch(0.97 0.01 150);
+  --secondary: oklch(0.24 0.008 270);
+  --secondary-foreground: oklch(0.96 0.005 270);
 
-  --muted: oklch(0.24 0.015 160);
-  --muted-foreground: oklch(0.68 0.02 160);
+  --muted: oklch(0.22 0.006 270);
+  --muted-foreground: oklch(0.66 0.012 270);
 
-  --accent: oklch(0.78 0.16 175);
-  --accent-foreground: oklch(0.18 0.04 160);
+  --accent: oklch(0.78 0.09 270);
+  --accent-foreground: oklch(0.16 0.02 270);
 
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.98 0.01 0);
+  --destructive: oklch(0.66 0.20 25);
+  --destructive-foreground: oklch(0.98 0.005 0);
 
-  --success: oklch(0.78 0.18 150);
-  --success-foreground: oklch(0.18 0.04 160);
+  --success: oklch(0.78 0.13 160);
+  --success-foreground: oklch(0.16 0.02 270);
 
-  --warning: oklch(0.82 0.16 80);
-  --warning-foreground: oklch(0.18 0.04 60);
+  --warning: oklch(0.82 0.13 80);
+  --warning-foreground: oklch(0.16 0.02 60);
 
-  --border: oklch(0.28 0.02 160 / 0.8);
-  --input: oklch(0.24 0.02 160);
-  --ring: oklch(0.82 0.19 142);
+  --border: oklch(0.28 0.008 270 / 0.7);
+  --input: oklch(0.22 0.008 270);
+  --ring: oklch(0.74 0.13 285);
 
-  --glow: oklch(0.82 0.19 142 / 0.4);
+  --glow: oklch(0.74 0.13 285 / 0.32);
 }
 
 @layer base {
@@ -95,22 +94,27 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.82 0.19 142 / 0.12), transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, oklch(0.78 0.16 175 / 0.08), transparent 60%);
+      radial-gradient(ellipse 70% 40% at 50% -10%, oklch(0.74 0.13 285 / 0.10), transparent 60%),
+      radial-gradient(ellipse 50% 35% at 85% 90%, oklch(0.78 0.09 270 / 0.06), transparent 60%);
     background-attachment: fixed;
     font-feature-settings: "ss01", "cv01";
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
   code, pre { font-family: var(--font-mono); }
+  /* Slim scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: oklch(0.32 0.01 270 / 0.6); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(0.4 0.02 270 / 0.8); }
 }
 
 @layer utilities {
   .glass {
-    background: oklch(0.20 0.02 160 / 0.6);
-    backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid oklch(1 0 0 / 0.06);
+    background: oklch(0.20 0.008 270 / 0.55);
+    backdrop-filter: blur(18px) saturate(130%);
+    border: 1px solid oklch(1 0 0 / 0.05);
   }
-  .glow-primary { box-shadow: 0 0 40px -8px var(--glow); }
+  .glow-primary { box-shadow: 0 0 32px -10px var(--glow); }
   .text-gradient {
     background: var(--gradient-accent);
     -webkit-background-clip: text;
@@ -119,8 +123,8 @@
   }
   .grid-bg {
     background-image:
-      linear-gradient(oklch(1 0 0 / 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px);
-    background-size: 48px 48px;
+      linear-gradient(oklch(1 0 0 / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(1 0 0 / 0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 }
