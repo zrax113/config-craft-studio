@@ -76,6 +76,24 @@ export function ConfigStudio() {
     setRaw(content);
   }
 
+  // Listen for sidebar plugin clicks
+  useEffect(() => {
+    return onLoadPlugin((id) => {
+      const sample = SAMPLES[id];
+      const meta = PLUGIN_LIST.find((p) => p.id === id);
+      if (sample) {
+        loadSample(sample.content, sample.format);
+        toast.success(`Loaded ${sample.label}`, {
+          description: "Default config inserted — edit & export.",
+        });
+      } else {
+        toast.error(`No default config for ${meta?.name ?? id}`, {
+          description: "Sample not bundled yet — paste your own to start editing.",
+        });
+      }
+    });
+  }, []);
+
   function update(path: string[], value: any) {
     setEdited((prev: any) => setDeep(prev, path, value));
   }
