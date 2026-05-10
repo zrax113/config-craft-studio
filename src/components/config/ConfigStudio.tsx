@@ -392,6 +392,30 @@ export function ConfigStudio() {
               transition={{ duration: 0.25 }}
               className="space-y-1 min-w-0"
             >
+              {detection && detection.id === "unknown" && (
+                <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5 font-semibold text-foreground/80 uppercase tracking-wider mb-1">
+                    <HelpCircle className="size-3.5" /> Unrecognized config
+                  </div>
+                  <p className="leading-relaxed">
+                    We couldn't match a known plugin — editing as a generic config. Closest guesses:{" "}
+                    {detection.candidates.slice(0, 3).map((c, i) => (
+                      <span key={c.id}>
+                        {i > 0 && ", "}
+                        <button
+                          className="underline decoration-dotted hover:text-primary"
+                          onClick={async () => {
+                            const s = await loadSample(c.id);
+                            if (s) applySample(s.content, s.format);
+                          }}
+                        >
+                          {c.name}
+                        </button>
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              )}
               {schemaIssues.length > 0 && (
                 <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 p-2.5 space-y-1">
                   <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warning uppercase tracking-wider">
