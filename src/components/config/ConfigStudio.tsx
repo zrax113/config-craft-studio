@@ -7,6 +7,7 @@ import { detectPlugin, type DetectionResult } from "@/lib/plugin-detect";
 import { SAMPLE_LIST } from "@/lib/sample-configs";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
+import { ScrollToTop } from "./ScrollToTop";
 import {
   Check,
   Copy,
@@ -38,6 +39,8 @@ export function ConfigStudio() {
   const [filename, setFilename] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const editorScrollRef = useRef<HTMLDivElement>(null);
+  const outputScrollRef = useRef<HTMLPreElement>(null);
 
   const parsed = useMemo(() => parseConfig(raw), [raw]);
   const detection: DetectionResult | null = useMemo(() => {
