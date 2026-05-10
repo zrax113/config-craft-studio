@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
+import { useHistory } from "@/hooks/useHistory";
 import {
   Check,
   Copy,
