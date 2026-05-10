@@ -78,7 +78,7 @@ export function ConfigStudio() {
 
   // Listen for sidebar plugin clicks
   useEffect(() => {
-    return onLoadPlugin((id) => {
+    const off = onLoadPlugin((id) => {
       const sample = SAMPLES[id];
       const meta = PLUGIN_LIST.find((p) => p.id === id);
       if (sample) {
