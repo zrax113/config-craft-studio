@@ -1,0 +1,17 @@
+key-file-name: key.pem
+username-prefix: '.'
+replace-spaces: true
+disconnect:
+  invalid-key: 'Please connect through the official Geyser.'
+  invalid-arguments-length: 'Expected 2 arguments, got {0}. Is Geyser configured correctly?'
+player-link:
+  enabled: true
+  require-link: false
+  allow-linking: true
+  type: sqlite
+  enable-own-linking: true
+metrics:
+  enabled: true
+  uuid: generateduuid
+debug: false
+config-version: 3

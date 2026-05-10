@@ -1,0 +1,34 @@
+factions:
+  defaultRole: NORMAL
+  maxNameLength: 16
+  minNameLength: 3
+  homesEnabled: true
+  homesTeleportAllowedFromDifferentWorld: true
+  maxFactionRelations: 0
+  defaultRelation: NEUTRAL
+  defaultPeacefulRelation: NEUTRAL
+powerPerPlayer: 10.0
+powerPerDeath: 4.0
+powerOfflineLossPerDay: 0.0
+powerOfflineLossLimit: 0.0
+defaultPlayerPowerMin: -10.0
+defaultPlayerPowerMax: 10.0
+defaultPlayerPower: 0.0
+landAlphaUpkeepEnabled: false
+warmupTime:
+  home: 0
+  warp: 0
+econ:
+  Enabled: true
+  universeAccount: ''
+  costClaim: 30.0
+  costUnclaim: -20.0
+  costCreate: 100.0
+  costJoin: 0.0
+  costLeave: 0.0
+worldsNoClaiming:
+  - skyworld
+worldsNoPowerLoss:
+  - peaceful
+worldsPVPRules:
+  - world

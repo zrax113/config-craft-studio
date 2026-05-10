@@ -1,0 +1,79 @@
+Skills:
+  General:
+    StatsTrackingEnabled: true
+    Power_Level_Cap: 0
+    Truncate_Skills: false
+    Show_Profile_Loading_Notification: true
+    Stats_Display_Order: ASCENDING
+  Mining:
+    Enabled: true
+    Level_Cap: 1000
+    XP_Multiplier: 1.0
+    Double_Drops_Enabled: true
+    Blast_Mining: true
+  Woodcutting:
+    Enabled: true
+    Level_Cap: 1000
+    Tree_Feller_Threshold: 500
+    Double_Drops_Enabled: true
+  Excavation:
+    Enabled: true
+    Level_Cap: 1000
+    Double_Drops_Enabled: true
+  Herbalism:
+    Enabled: true
+    Level_Cap: 1000
+    Double_Drops_Enabled: true
+    Green_Thumb: true
+  Fishing:
+    Enabled: true
+    Level_Cap: 1000
+    Treasure_Drop_Rate: 5
+  Unarmed:
+    Enabled: true
+    Level_Cap: 1000
+    Disarm_Enabled: true
+  Archery:
+    Enabled: true
+    Level_Cap: 1000
+  Swords:
+    Enabled: true
+    Level_Cap: 1000
+    Bleed:
+      Enabled: true
+      Max_Ticks: 3
+  Axes:
+    Enabled: true
+    Level_Cap: 1000
+  Acrobatics:
+    Enabled: true
+    Level_Cap: 1000
+    Dodge:
+      Enabled: true
+  Taming:
+    Enabled: true
+    Level_Cap: 1000
+  Repair:
+    Enabled: true
+    Level_Cap: 1000
+    Anvil_Messages: true
+  Salvage:
+    Enabled: true
+    Level_Cap: 1000
+  Alchemy:
+    Enabled: true
+    Level_Cap: 1000
+Items:
+  Chimaera_Wing:
+    Enabled: true
+    Item_Material: FEATHER
+    Cooldown: 240
+    Use_Cost: 1
+    Recipe_Cost: 5
+Mob_Healthbar:
+  Display_Type: HEARTS
+Particles:
+  LevelUp_Enabled: true
+Commands:
+  Inspect:
+    Show_Offline: true

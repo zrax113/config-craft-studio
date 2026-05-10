@@ -1,0 +1,43 @@
+language: en
+default_journal_slot: -1
+default_conversation_color: aqua
+default_conversation_io: menu
+journal_lock_default: false
+remove_items_after_respawn: true
+notify:
+  citizens_npc_disabled: true
+hook:
+  worldedit: true
+  worldguard: true
+  vault: true
+  citizens: true
+  placeholderapi: true
+  protocollib: true
+  mythicmobs: true
+  brewery: true
+mysql:
+  enabled: false
+  host: localhost
+  port: 3306
+  base: minecraft
+  user: root
+  pass: pass
+  prefix: 'betonquest_'
+debug: false
+update:
+  enabled: true
+  strategy: MINOR
+  ingame_notification: true
+log_trim: true
+backup:
+  enabled: true
+  delay: 10
+date_format: dd.MM.yyyy HH:mm
+quest_items_unbreakable: true
+journal:
+  one_entry_per_page: false
+  reversed_order: false
+  hide_date: false
+  full_main_page: false
+  give_on_respawn: true
+mob_compass_distance: 250

@@ -1,0 +1,45 @@
+language: en-gb
+check_for_updates: true
+debug_logging: false
+database:
+  type: SQLITE
+  mysql_credentials:
+    host: localhost
+    port: 3306
+    database: HuskHomes
+    username: root
+    password: pa55w0rd
+  table_names:
+    homes_data: huskhomes_homes
+    warps_data: huskhomes_warps
+    user_data: huskhomes_users
+general:
+  max_homes: 5
+  max_public_homes: 2
+  set_warp_command: true
+  list_items_per_page: 12
+  asynchronous_teleports: true
+  teleport_warmup_time: 5
+  teleport_warmup_cancel_on_move: true
+  teleport_request_expiry: 60
+cross_server:
+  enabled: false
+  cluster_id: ''
+  redis:
+    host: localhost
+    port: 6379
+    password: ''
+    use_ssl: false
+rtp:
+  cooldown_length: 30
+  radius: 5000
+  spawn_radius: 500
+  enabled_worlds:
+    - world
+spawn:
+  command: true
+  unique_per_world: false
+sounds:
+  teleportation: ENTITY_ENDERMAN_TELEPORT
+  teleport_warmup: BLOCK_NOTE_BLOCK_BANJO
+  teleport_complete: ENTITY_ENDERMAN_TELEPORT

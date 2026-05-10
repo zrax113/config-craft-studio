@@ -1,0 +1,13 @@
+check_updates: true
+debug: false
+date_format: 'MM/dd/yy HH:mm:ss'
+boolean:
+  'true': 'yes'
+  'false': 'no'
+cloud_enabled: true
+cloud_allow_unverified_expansions: false
+expansions:
+  player:
+    use_full_name: false
+  server:
+    proxy_online_mode: true

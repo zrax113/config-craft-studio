@@ -1,0 +1,54 @@
+regions:
+  enable: true
+  invincibility-removes-mobs: false
+  cancel-chat-without-recipients: true
+  default-flags:
+    initialize-with-default-region: false
+  high-frequency-flags: false
+  protect-against-liquid-flow: false
+  wand: minecraft:leather
+  max-region-count-per-player:
+    default: 7
+  sql:
+    use: false
+    dsn: jdbc:mysql://localhost/worldguard
+    username: worldguard
+    password: worldguard
+    table-prefix: ''
+  uuid-migration:
+    perform-on-next-start: true
+    keep-names-that-lack-a-uuid: true
+  use-paper-entity-origin: false
+
+summary-on-start: true
+op-permissions: true
+host-keys: {}
+host-keys-allow-forge-clients: false
+build-permission-nodes:
+  enable: false
+  deny-message: '&cYou do not have permission to build here.'
+
+security:
+  deop-everyone-on-join: false
+  block-in-game-op-command: false
+
+event-handling:
+  block-entity-spawns-with-untraceable-cause: false
+  interaction-whitelist: []
+  emit-block-use-at-feet: []
+
+protection:
+  item-durability: true
+  remove-infinite-stacks: false
+  disable-xp-orb-drops: false
+  disable-obsidian-generators: false
+
+gameplay:
+  block-potions: []
+  block-potions-overly-reliably: false
+  disable-conduit-effects: false
+  disable-explosion-damage: false
+
+default:
+  pumpkin-scuba: false
+  disable-health-regain: false

@@ -1,0 +1,31 @@
+worlds:
+  world:
+    radiusX: 5000
+    radiusZ: 5000
+    x: 0.0
+    z: 0.0
+    shape: round
+  world_nether:
+    radiusX: 1000
+    radiusZ: 1000
+    x: 0.0
+    z: 0.0
+    shape: round
+round-border: true
+fill-autosave-frequency: 30
+knockback: 3.0
+timer-ticks: 5
+remount-ticks: 0
+remount-deny-message: '&cYou cannot ride that here.'
+message: '&cThe border of the world has been reached.'
+portal-redirection: true
+disable-build: true
+whoosh-effect: true
+preventblockplace: true
+preventmobspawn: true
+denypearl: true
+killplayer: false
+fillmemtolerance: 500
+fillautosaveseconds: 30
+dynmap: true
+dynmapmessage: 'The border of the world.'

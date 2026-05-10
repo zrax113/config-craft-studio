@@ -1,0 +1,46 @@
+BotToken: 'YOUR_BOT_TOKEN_HERE'
+
+Channels:
+  global: '0000000000000000'
+  staff: '0000000000000000'
+
+DiscordChatChannelMinecraftToDiscord: true
+DiscordChatChannelDiscordToMinecraft: true
+DiscordConsoleChannelId: '0'
+
+DiscordChatChannelPrefixRequiredToProcessMessage: ''
+DiscordChatChannelBlockedRolesAsBlacklist: false
+DiscordChatChannelBlockedRolesIds: []
+
+MinecraftChatToDiscordMessageFormat: '%username% » %message%'
+MinecraftChatToDiscordMessageFormatNoPrimaryGroup: '%username% » %message%'
+
+DiscordToMinecraftChatMessageFormat: '&b[Discord] &f<%username%> &7%message%'
+DiscordToMinecraftChatMessageFormatNoRole: '&b[Discord] &7<%username%> %message%'
+
+DiscordChatChannelTopicFormat: 'Online: %playercount%/%playermax% — %motd%'
+DiscordChatChannelTopicAtServerStartFormat: '%servername% started up'
+DiscordChatChannelTopicAtServerShutdownFormat: '%servername% shut down'
+
+DiscordChatChannelMinecraftToDiscordRolesAllowedToUseColorCodesAndFormatting: true
+DiscordChatChannelTranslateMentions: true
+DiscordChatChannelEmojiBehavior: name
+DiscordChatChannelEscapeMarkdown: false
+DiscordChatChannelTruncateLength: 256
+
+ServerStartupMessage: ':white_check_mark: **Server has started.**'
+ServerShutdownMessage: ':octagonal_sign: **Server is shutting down.**'
+
+DiscordPlayerListCommandEnabled: true
+DiscordPlayerListCommandMessage: '**Online players (%playercount%/%playermax%)**: %playerlist%'
+
+MinecraftDiscordAccountLinkedConsoleCommands:
+  - 'lp user %player% parent add discord-linked'
+MinecraftDiscordAccountUnlinkedConsoleCommands:
+  - 'lp user %player% parent remove discord-linked'
+
+Experiment_WebhookChatMessageDelivery: true
+Experiment_MCDiscordReserializer_ToDiscord: true
+Experiment_MCDiscordReserializer_ToMinecraft: true
+
+Debug: []

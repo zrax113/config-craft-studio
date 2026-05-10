@@ -1,0 +1,98 @@
+scoreboard-teams:
+  enabled: true
+  enable-collision: true
+  invisible-nametags: false
+  anti-override: true
+  sorting:
+    enabled: true
+    case-sensitive-sorting: true
+    sorting-types:
+      - 'GROUPS:owner,admin,mod,vip,default'
+      - 'PLACEHOLDER_A_TO_Z:%player%'
+  unlimited-nametag-mode:
+    enabled: false
+    use-marker-tag-for-1-8-x-clients: false
+    disable-on-boats: true
+    space-between-lines: 0.22
+    disable-condition: '%world%=disabledworld'
+    dynamic-lines:
+      - abovename
+      - nametag
+      - belowname
+    static-lines: {}
+
+header-footer:
+  enabled: true
+  header:
+    - '&3&l»  &bExampleNetwork  &3&l«'
+    - '&7Welcome &f%player%'
+  footer:
+    - '&7play.example.net'
+    - '&8Players online: &b%online%&7/&b%maxplayers%'
+  per-world: {}
+  per-server: {}
+
+tablist-name-formatting:
+  enabled: true
+  anti-override: true
+  align-tabsuffix-on-the-right: true
+  character-width-overrides: {}
+
+yellow-number-in-tablist:
+  enabled: true
+  value: '%ping%'
+
+belowname-objective:
+  enabled: false
+  value: '%health%'
+  title: 'Health'
+
+bossbar:
+  enabled: false
+  toggle-command: '/bossbar'
+  remember-toggle-choice: false
+  hidden-by-default: false
+  bars:
+    ServerInfo:
+      style: PROGRESS
+      color: GREEN
+      progress: '100'
+      text: '&aWelcome to the server!'
+
+scoreboard:
+  enabled: false
+  toggle-command: '/sb'
+  remember-toggle-choice: false
+  hidden-by-default: false
+  use-numbers: false
+  scoreboards:
+    scoreboard-default:
+      title: '&3&lExample'
+      lines:
+        - ''
+        - '&fPlayer: &b%player%'
+        - '&fPing: &b%ping%ms'
+        - '&fOnline: &b%online%'
+        - ''
+
+global-playerlist:
+  enabled: false
+
+per-world-playerlist:
+  enabled: false
+
+placeholders:
+  date-format: 'dd.MM.yyyy'
+  time-format: '[HH:mm:ss / h:mm a]'
+  time-offset: 0
+  register-tab-expansion: true
+
+placeholder-output-replacements: {}
+
+mysql:
+  enabled: false
+  host: 127.0.0.1
+  port: 3306
+  database: tab
+  username: user
+  password: pass

@@ -1,8 +1,161 @@
 {
-  "$comment": "Override or add bundled samples by dropping YAML/TOML files into this folder. Listed entries take precedence over the in-bundle defaults at src/lib/sample-configs.ts. See README.md.",
+  "$comment": "Drop-in plugin defaults. Each sample id maps to a YAML/TOML file in this folder. See README.md for how to add new plugins.",
+  "generated": "2026-05-10T15:45:47.352Z",
   "samples": {
-    "essentials": { "label": "EssentialsX · config.yml", "format": "yaml", "path": "essentialsx/config.yml" },
-    "essentials_messages": { "label": "EssentialsX · messages_en.yml", "format": "yaml", "path": "essentialsx/messages_en.yml" },
-    "essentials_kits": { "label": "EssentialsX · kits.yml", "format": "yaml", "path": "essentialsx/kits.yml" }
+    "luckperms": {
+      "label": "LuckPerms · config.yml",
+      "format": "yaml",
+      "path": "luckperms/config.yml"
+    },
+    "luckperms_messages": {
+      "label": "LuckPerms · lang/en.yml",
+      "format": "yaml",
+      "path": "luckperms/lang/en.yml"
+    },
+    "essentials": {
+      "label": "EssentialsX · config.yml",
+      "format": "yaml",
+      "path": "essentialsx/config.yml"
+    },
+    "essentials_messages": {
+      "label": "EssentialsX · messages_en.yml",
+      "format": "yaml",
+      "path": "essentialsx/messages_en.yml"
+    },
+    "essentials_kits": {
+      "label": "EssentialsX · kits.yml",
+      "format": "yaml",
+      "path": "essentialsx/kits.yml"
+    },
+    "tab": {
+      "label": "TAB · config.yml",
+      "format": "yaml",
+      "path": "tab/config.yml"
+    },
+    "velocity": {
+      "label": "Velocity · velocity.toml",
+      "format": "toml",
+      "path": "velocity/velocity.toml"
+    },
+    "paper": {
+      "label": "Paper · paper-global.yml",
+      "format": "yaml",
+      "path": "paper/paper-global.yml"
+    },
+    "deluxemenus": {
+      "label": "DeluxeMenus · config.yml",
+      "format": "yaml",
+      "path": "deluxemenus/config.yml"
+    },
+    "worldguard": {
+      "label": "WorldGuard · config.yml",
+      "format": "yaml",
+      "path": "worldguard/config.yml"
+    },
+    "discordsrv": {
+      "label": "DiscordSRV · config.yml",
+      "format": "yaml",
+      "path": "discordsrv/config.yml"
+    },
+    "bungeecord": {
+      "label": "BungeeCord · config.yml",
+      "format": "yaml",
+      "path": "bungeecord/config.yml"
+    },
+    "placeholderapi": {
+      "label": "PlaceholderAPI · config.yml",
+      "format": "yaml",
+      "path": "placeholderapi/config.yml"
+    },
+    "geyser": {
+      "label": "Geyser · config.yml",
+      "format": "yaml",
+      "path": "geyser/config.yml"
+    },
+    "floodgate": {
+      "label": "Floodgate · config.yml",
+      "format": "yaml",
+      "path": "floodgate/config.yml"
+    },
+    "viaversion": {
+      "label": "ViaVersion · config.yml",
+      "format": "yaml",
+      "path": "viaversion/config.yml"
+    },
+    "multiverse": {
+      "label": "Multiverse-Core · config.yml",
+      "format": "yaml",
+      "path": "multiverse/config.yml"
+    },
+    "shopgui": {
+      "label": "ShopGUI+ · shops.yml",
+      "format": "yaml",
+      "path": "shopgui/shops.yml"
+    },
+    "huskhomes": {
+      "label": "HuskHomes · config.yml",
+      "format": "yaml",
+      "path": "huskhomes/config.yml"
+    },
+    "mcmmo": {
+      "label": "mcMMO · config.yml",
+      "format": "yaml",
+      "path": "mcmmo/config.yml"
+    },
+    "jobs": {
+      "label": "Jobs Reborn · generalConfig.yml",
+      "format": "yaml",
+      "path": "jobs/generalConfig.yml"
+    },
+    "worldborder": {
+      "label": "WorldBorder · config.yml",
+      "format": "yaml",
+      "path": "worldborder/config.yml"
+    },
+    "authme": {
+      "label": "AuthMe · config.yml",
+      "format": "yaml",
+      "path": "authme/config.yml"
+    },
+    "coreprotect": {
+      "label": "CoreProtect · config.yml",
+      "format": "yaml",
+      "path": "coreprotect/config.yml"
+    },
+    "griefprevention": {
+      "label": "GriefPrevention · config.yml",
+      "format": "yaml",
+      "path": "griefprevention/config.yml"
+    },
+    "betonquest": {
+      "label": "BetonQuest · config.yml",
+      "format": "yaml",
+      "path": "betonquest/config.yml"
+    },
+    "citizens": {
+      "label": "Citizens · config.yml",
+      "format": "yaml",
+      "path": "citizens/config.yml"
+    },
+    "betterrtp": {
+      "label": "BetterRTP · config.yml",
+      "format": "yaml",
+      "path": "betterrtp/config.yml"
+    },
+    "litebans": {
+      "label": "LiteBans · config.yml",
+      "format": "yaml",
+      "path": "litebans/config.yml"
+    },
+    "factions": {
+      "label": "Factions · config.yml",
+      "format": "yaml",
+      "path": "factions/config.yml"
+    },
+    "papimacros": {
+      "label": "Custom · placeholders.yml",
+      "format": "yaml",
+      "path": "placeholderapi/placeholders.yml"
+    }
   }
 }

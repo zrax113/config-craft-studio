@@ -1,7 +1,4 @@
-# EssentialsX — config.yml
-# Trimmed default. Replace this file in public/configs/essentialsx/ to update
-# the studio's reference config without rebuilding.
-
+# EssentialsX config
 nickname-prefix: '~'
 op-prefix: '&4[Op]&f'
 hide-displayname-in-vanish: true
@@ -9,10 +6,12 @@ hide-displayname-in-vanish: true
 teleport-cooldown: 0
 teleport-delay: 0
 teleport-invulnerability: 4
+teleport-when-free-from-jail: true
 cancel-afk-on-move: true
 cancel-afk-on-interact: true
 auto-afk: 300
 auto-afk-kick: -1
+freeze-afk-players: false
 
 heal-cooldown: 60
 command-cooldowns:
@@ -24,15 +23,18 @@ currency-symbol: '$'
 max-money: 10000000000000
 min-money: -10000
 starting-balance: 1000
+worth-money: 1
 currency-format: '#,##0.00'
 locale: en
 
 ops-name-color: c
 debug: false
+locale-language: en
 spawn-on-join: false
 respawn-at-home: false
 update-bed-at-daytime: true
 
+home-homes-per-player: 3
 homes-per-player: 3
 
 socialspy-by-default: false
@@ -46,6 +48,21 @@ chat:
     Default: '&7{DISPLAYNAME}&8»&7 {MESSAGE}'
   radius: 0
   shout-format: '&6[Shout]&f {DISPLAYNAME}: &7{MESSAGE}'
+  question-format: '&6[?]&f {DISPLAYNAME}: &7{MESSAGE}'
+
+newbies:
+  announce-format: 'Welcome {DISPLAYNAME} to the server!'
+  spawnpoint: newbies
+  kit: ''
+
+kits:
+  tools:
+    delay: 600
+    items:
+      - 272 1
+      - 273 1
+      - 274 1
+      - 275 1
 
 backup:
   interval: 30
@@ -54,9 +71,100 @@ backup:
 economy:
   log-enabled: false
 
+protect:
+  prevent:
+    lava-flow: false
+    water-flow: false
+    water-bucket-flow: false
+    fire-spread: true
+    lava-fire-spread: true
+    flint-fire: false
+    lightning-fire-spread: true
+    portal-creation: false
+    tnt-explosion: false
+    tnt-playerdamage: false
+    tnt-blockdamage: false
+    creeper-explosion: false
+    creeper-playerdamage: false
+    creeper-blockdamage: false
+    enderdragon-blockdamage: true
+    enderman-pickup: false
+    villager-death: false
+
+  guard-block:
+    place: false
+    use: false
+
+  signs:
+    - colorize
+    - command
+    - balance
+    - buy
+    - sell
+    - free
+    - disposal
+    - heal
+    - mail
+    - protection
+    - time
+    - warp
+    - kit
+    - enchant
+
 death-messages: true
+muted-players-can-have-fun: false
+remove-god-on-disconnect: false
 remove-effects-on-death: true
 spawn-if-no-home: false
 hide-permissionless-help: true
 disabled-commands: []
 overridden-commands: []
+player-commands:
+  - afk
+  - balance
+  - balancetop
+  - bigtree
+  - book
+  - chat
+  - clearinventory
+  - delhome
+  - depth
+  - eco.loan
+  - getpos
+  - hat
+  - help
+  - helpop
+  - home
+  - ignore
+  - info
+  - itemdb
+  - itemname
+  - kit
+  - kits
+  - list
+  - mail
+  - me
+  - motd
+  - msg
+  - near
+  - nick
+  - pay
+  - ping
+  - powertool
+  - powertooltoggle
+  - protect
+  - rules
+  - seen
+  - sell
+  - sethome
+  - setxmpp
+  - signs
+  - spawn
+  - suicide
+  - tpa
+  - tpaccept
+  - tpahere
+  - tpdeny
+  - warp
+  - whois
+  - workbench
