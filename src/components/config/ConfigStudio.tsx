@@ -254,7 +254,7 @@ export function ConfigStudio() {
               {SAMPLE_LIST.map(([id, s]) => (
                 <button
                   key={id}
-                  onClick={() => loadSample(s.content, s.format)}
+                  onClick={() => applySample(s.content, s.format)}
                   className="text-[11px] px-2 py-1 rounded-md bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all border border-border/50 hover:border-primary/30"
                 >
                   {s.label}
