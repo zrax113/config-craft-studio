@@ -36,7 +36,8 @@ function setDeep(obj: any, path: string[], value: any): any {
 export function ConfigStudio() {
   const cfg = useBrandConfig();
   const [raw, setRaw] = useState("");
-  const [edited, setEdited] = useState<any>(null);
+  const editedHistory = useHistory<any>(null);
+  const edited = editedHistory.value;
   const [format, setFormat] = useState<ConfigFormat>("yaml");
   const [filename, setFilename] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
@@ -50,13 +51,13 @@ export function ConfigStudio() {
     return detectPlugin(parsed.data, parsed.format, filename);
   }, [parsed, filename]);
 
-  // Sync edited <- parsed when input changes
-  useMemo(() => {
+  // Sync edited <- parsed when input changes (resets history — input is the source of truth)
+  useEffect(() => {
     if (parsed.ok) {
-      setEdited(parsed.data);
+      editedHistory.reset(parsed.data);
       if (parsed.format) setFormat(parsed.format);
     } else if (!raw.trim()) {
-      setEdited(null);
+      editedHistory.reset(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raw]);
@@ -95,8 +96,25 @@ export function ConfigStudio() {
     return () => { off(); };
   }, []);
 
+  // Keyboard shortcuts: Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const inEditable =
+        target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (inEditable) return;
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod || e.key.toLowerCase() !== "z") return;
+      e.preventDefault();
+      if (e.shiftKey) editedHistory.redo();
+      else editedHistory.undo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editedHistory]);
+
   function update(path: string[], value: any) {
-    setEdited((prev: any) => setDeep(prev, path, value));
+    editedHistory.set((prev: any) => setDeep(prev, path, value));
   }
 
   async function copyOut() {
