@@ -1,10 +1,12 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser";
-import { detectPlugin, type DetectionResult } from "@/lib/plugin-detect";
-import { SAMPLE_LIST } from "@/lib/sample-configs";
+import { detectPlugin, type DetectionResult, PLUGIN_LIST } from "@/lib/plugin-detect";
+import { SAMPLES, SAMPLE_LIST } from "@/lib/sample-configs";
+import { onLoadPlugin } from "@/lib/plugin-bus";
+import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
