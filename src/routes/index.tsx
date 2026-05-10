@@ -177,9 +177,11 @@ function Studio() {
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30 px-2.5 py-1 rounded-md border border-border/40">
             <Keyboard className="size-3" />
-            <kbd className="font-mono">⌘Z</kbd> undo
+            <kbd className="font-mono">⌘S</kbd> export
             <span className="opacity-40">·</span>
-            <kbd className="font-mono">Tab</kbd> indent
+            <kbd className="font-mono">⌘⇧C</kbd> copy
+            <span className="opacity-40">·</span>
+            <kbd className="font-mono">?</kbd> help
           </div>
           <Button
             variant="ghost"
