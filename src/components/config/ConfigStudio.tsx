@@ -191,6 +191,23 @@ export function ConfigStudio() {
     file.text().then((t) => setRaw(t));
   }
 
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        toast.error("Clipboard is empty");
+        return;
+      }
+      setFilename(undefined);
+      setRaw(text);
+      toast.success("Pasted from clipboard");
+    } catch {
+      toast.error("Clipboard access blocked", {
+        description: "Use ⌘V / Ctrl+V inside the editor instead.",
+      });
+    }
+  }
+
   function reset() {
     setRaw("");
     editedHistory.reset(null);
