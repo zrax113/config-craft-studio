@@ -223,7 +223,16 @@ export function ConfigStudio() {
         icon={<Wand2 className="size-4" />}
         delay={0}
       >
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 text-xs"
+            onClick={pasteFromClipboard}
+            title="Paste from clipboard"
+          >
+            <ClipboardPaste className="size-3.5 mr-1.5" /> Paste
+          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -262,6 +271,14 @@ export function ConfigStudio() {
             ))}
           </div>
         </div>
+
+        <PackFilePicker detectionId={detection?.id} onPick={async (sampleId) => {
+          const sample = await loadSample(sampleId);
+          if (sample) {
+            applySample(sample.content, sample.format);
+            toast.success(`Loaded ${sample.label}`);
+          }
+        }} />
 
         <CodeEditor
           value={raw}
