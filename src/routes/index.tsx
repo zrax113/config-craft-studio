@@ -220,5 +220,4 @@ function Studio() {
     </div>
   );
 }
-  );
-}
+
