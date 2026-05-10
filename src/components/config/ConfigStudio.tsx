@@ -344,7 +344,7 @@ export function ConfigStudio() {
           </div>
         }
       >
-        <div ref={editorScrollRef} className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
+        <div ref={editorScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden pr-1 -mr-1 min-h-0 min-w-0">
           {!edited ? (
             <EmptyState />
           ) : (
@@ -353,8 +353,30 @@ export function ConfigStudio() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25 }}
-              className="space-y-1"
+              className="space-y-1 min-w-0"
             >
+              {schemaIssues.length > 0 && (
+                <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 p-2.5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warning uppercase tracking-wider">
+                    <AlertTriangle className="size-3.5" />
+                    Schema check · {schemaIssues.length} issue{schemaIssues.length === 1 ? "" : "s"}
+                  </div>
+                  <ul className="text-[11px] space-y-0.5 text-muted-foreground">
+                    {schemaIssues.slice(0, 6).map((iss, i) => (
+                      <li key={i} className="flex gap-1.5">
+                        <span
+                          className={
+                            iss.level === "error" ? "text-destructive font-semibold" : "text-warning font-semibold"
+                          }
+                        >
+                          {iss.level === "error" ? "ERR" : "WARN"}
+                        </span>
+                        <span className="break-words">{iss.message}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {Object.entries(edited).map(([k, v]) => (
                 <FieldEditor key={k} path={[k]} value={v} onChange={update} />
               ))}
