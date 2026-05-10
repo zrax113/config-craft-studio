@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { emitLoadPlugin } from "@/lib/plugin-bus";
+import { Onboarding } from "@/components/config/Onboarding";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -157,6 +158,7 @@ function Studio() {
         {/* Workspace */}
         <main className="relative z-10 flex-1 overflow-auto p-5">
           <ConfigStudio />
+          <Onboarding />
         </main>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
+import { useHistory } from "@/hooks/useHistory";
 import {
   Check,
   Copy,
@@ -20,6 +21,8 @@ import {
   Wand2,
   CheckCircle2,
   RotateCcw,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
@@ -36,7 +39,8 @@ function setDeep(obj: any, path: string[], value: any): any {
 export function ConfigStudio() {
   const cfg = useBrandConfig();
   const [raw, setRaw] = useState("");
-  const [edited, setEdited] = useState<any>(null);
+  const editedHistory = useHistory<any>(null);
+  const edited = editedHistory.value;
   const [format, setFormat] = useState<ConfigFormat>("yaml");
   const [filename, setFilename] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
@@ -50,13 +54,13 @@ export function ConfigStudio() {
     return detectPlugin(parsed.data, parsed.format, filename);
   }, [parsed, filename]);
 
-  // Sync edited <- parsed when input changes
-  useMemo(() => {
+  // Sync edited <- parsed when input changes (resets history — input is the source of truth)
+  useEffect(() => {
     if (parsed.ok) {
-      setEdited(parsed.data);
+      editedHistory.reset(parsed.data);
       if (parsed.format) setFormat(parsed.format);
     } else if (!raw.trim()) {
-      setEdited(null);
+      editedHistory.reset(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raw]);
@@ -95,8 +99,25 @@ export function ConfigStudio() {
     return () => { off(); };
   }, []);
 
+  // Keyboard shortcuts: Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const inEditable =
+        target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (inEditable) return;
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod || e.key.toLowerCase() !== "z") return;
+      e.preventDefault();
+      if (e.shiftKey) editedHistory.redo();
+      else editedHistory.undo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editedHistory]);
+
   function update(path: string[], value: any) {
-    setEdited((prev: any) => setDeep(prev, path, value));
+    editedHistory.set((prev: any) => setDeep(prev, path, value));
   }
 
   async function copyOut() {
@@ -127,7 +148,7 @@ export function ConfigStudio() {
 
   function reset() {
     setRaw("");
-    setEdited(null);
+    editedHistory.reset(null);
     setFilename(undefined);
   }
 
@@ -250,17 +271,35 @@ export function ConfigStudio() {
         icon={<Sparkles className="size-4" />}
         delay={0.05}
         accessory={
-          cfg.studio.showPluginBadge && detection && detection.id !== "unknown" ? (
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              key={detection.id}
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              onClick={editedHistory.undo}
+              disabled={!editedHistory.canUndo}
+              title="Undo (⌘Z)"
             >
-              <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
-                {detection.category}
-              </Badge>
-            </motion.div>
-          ) : null
+              <Undo2 className="size-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              onClick={editedHistory.redo}
+              disabled={!editedHistory.canRedo}
+              title="Redo (⌘⇧Z)"
+            >
+              <Redo2 className="size-3.5" />
+            </Button>
+            {cfg.studio.showPluginBadge && detection && detection.id !== "unknown" && (
+              <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={detection.id}>
+                <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
+                  {detection.category}
+                </Badge>
+              </motion.div>
+            )}
+          </div>
         }
       >
         <div ref={editorScrollRef} className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
