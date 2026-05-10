@@ -1,0 +1,22 @@
+# DiscordSRV messages.yml (excerpt)
+MinecraftChatToDiscordMessage:
+  Content: '{username}: {message}'
+DiscordToMinecraftChatMessage:
+  Content: '&8[&5Discord&8] &f{name}: &7{message}'
+DiscordChatChannelTopicFormat: '%serverversion% \u2022 Online: %playercount%/%servermaxplayers%'
+DiscordChatChannelTopicAtServerShutdownFormat: 'Server is offline.'
+DiscordPlayerListCommandMessage: |-
+  Players online (%playercount%/%servermaxplayers%):
+  %playerlist%
+DiscordPlayerListCommandMessageNoPlayersOnline: 'No players online.'
+ServerWatchdogMessage: '@here Server appears to have frozen!'
+ServerStartMessage: ':white_check_mark: Server has started.'
+ServerStopMessage: ':octagonal_sign: Server is stopping.'
+PlayerJoinMessage:
+  Content: ':arrow_right: **{username}** joined the server.'
+PlayerLeaveMessage:
+  Content: ':arrow_left: **{username}** left the server.'
+PlayerDeathMessage:
+  Content: ':skull: {message}'
+PlayerAchievementMessage:
+  Content: ':trophy: **{username}** has earned the achievement *{achievement}*'

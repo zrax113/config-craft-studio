@@ -1,0 +1,19 @@
+# EssentialsX worth.yml — sell prices for /sell and /worth.
+worth:
+  cobblestone: 0.05
+  stone: 0.08
+  dirt: 0.02
+  oak_log: 0.5
+  iron_ingot: 5
+  gold_ingot: 8
+  diamond: 50
+  netherite_ingot: 250
+  emerald: 30
+  redstone: 0.5
+  coal: 0.4
+  wheat: 0.2
+  carrot: 0.15
+  potato: 0.15
+  beef: 1
+  pork: 1
+  chicken: 0.8
