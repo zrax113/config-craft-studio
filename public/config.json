@@ -1,0 +1,19 @@
+{
+  "$schema": "./config.schema.json",
+  "brand": {
+    "name": "ForgeYAML",
+    "tagline": "Visual config studio for Minecraft plugins",
+    "accentHue": 142,
+    "accentChroma": 0.19
+  },
+  "pricing": {
+    "price": "$5.97",
+    "compareAt": "$24",
+    "ctaLabel": "Get lifetime access"
+  },
+  "studio": {
+    "showSamples": true,
+    "showPluginBadge": true,
+    "defaultFormat": "auto"
+  }
+}

@@ -1,22 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ConfigStudio } from "@/components/config/ConfigStudio";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Bolt, Eye, Layers, ShieldCheck, Sparkles } from "lucide-react";
+import { useBrandConfig } from "@/lib/brand-config";
+import { PLUGIN_LIST } from "@/lib/plugin-detect";
+import { Bolt, Github, Keyboard, Sparkles } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ForgeYAML — Visual Plugin Config Generator for Minecraft" },
+      { title: "ForgeYAML — Visual Config Studio for Minecraft Plugins" },
       {
         name: "description",
         content:
-          "Paste any LuckPerms, EssentialsX, TAB or DeluxeMenus config and edit it visually. No YAML headaches — just toggles, inputs and live preview.",
-      },
-      { property: "og:title", content: "ForgeYAML — No-code plugin config builder" },
-      {
-        property: "og:description",
-        content: "Auto-detect any Minecraft plugin config and turn it into a clean visual editor.",
+          "Premium no-code editor for LuckPerms, EssentialsX, TAB, DeluxeMenus, Velocity, Paper and more. Auto-detect, edit visually, export YAML/TOML/JSON.",
       },
     ],
     links: [
@@ -28,197 +25,135 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: Index,
+  component: Studio,
 });
 
-function Index() {
-  return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+const CATEGORY_LABEL: Record<string, string> = {
+  permissions: "Permissions",
+  core: "Core",
+  ui: "UI / Display",
+  world: "World",
+  economy: "Economy",
+  social: "Social",
+  proxy: "Proxy",
+  server: "Server",
+  scripting: "Scripting",
+  other: "Utilities",
+};
 
-      {/* Nav */}
-      <header className="relative z-10 border-b border-border/40 backdrop-blur-md bg-background/40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary">
-              <Bolt className="size-4 text-primary-foreground" strokeWidth={2.5} />
-            </div>
-            <span className="font-display font-bold text-lg tracking-tight">ForgeYAML</span>
+function Studio() {
+  const cfg = useBrandConfig();
+  const [search, setSearch] = useState("");
+
+  const grouped = PLUGIN_LIST.reduce<Record<string, typeof PLUGIN_LIST>>((acc, p) => {
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return acc;
+    (acc[p.category] ??= [] as any).push(p);
+    return acc;
+  }, {});
+
+  return (
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* Top bar */}
+      <header className="relative z-20 h-14 shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-xl flex items-center px-4 gap-4">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary">
+            <Bolt className="size-4 text-primary-foreground" strokeWidth={2.5} />
           </div>
-          <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#studio" className="hover:text-foreground transition-colors">Studio</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
-          </nav>
-          <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
-            Get lifetime — $5.97
-          </Button>
+          <div className="leading-tight">
+            <div className="font-display font-bold text-sm tracking-tight">{cfg.brand.name}</div>
+            <div className="text-[10px] text-muted-foreground -mt-0.5">{cfg.brand.tagline}</div>
+          </div>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border border-border/40">
+            <Keyboard className="size-3" />
+            <kbd className="font-mono">Tab</kbd> indent · <kbd className="font-mono">⌘C</kbd> copy
+          </div>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noreferrer"
+            className="size-8 rounded-md hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Github className="size-4" />
+          </a>
+          <button className="text-xs font-semibold px-3 h-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 glow-primary transition-all">
+            {cfg.pricing.ctaLabel} · {cfg.pricing.price}
+          </button>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-12 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6"
-        >
-          <Sparkles className="size-3" />
-          Auto-detects 4+ plugins · zero YAML knowledge needed
-        </motion.div>
+      {/* Main */}
+      <div className="flex-1 flex min-h-0 relative">
+        {/* Background flourishes */}
+        <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+        <div className="absolute -top-32 left-1/3 size-[500px] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
 
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="font-display text-5xl md:text-7xl font-bold tracking-tight max-w-4xl mx-auto leading-[1.05]"
-        >
-          Plugin configs, <span className="text-gradient">without the YAML pain.</span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-        >
-          Paste any LuckPerms, EssentialsX, TAB or DeluxeMenus file. ForgeYAML detects the plugin,
-          turns it into clean toggles and inputs, and exports a clean config — live.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mt-9 flex items-center justify-center gap-3"
-        >
-          <Button
-            asChild
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold glow-primary h-12 px-6"
-          >
-            <a href="#studio">
-              Open the studio <ArrowRight className="size-4 ml-1" />
-            </a>
-          </Button>
-          <Button asChild size="lg" variant="ghost" className="h-12 px-6 hover:bg-muted">
-            <a href="#features">See how it works</a>
-          </Button>
-        </motion.div>
-      </section>
-
-      {/* Studio */}
-      <section id="studio" className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        <ConfigStudio />
-      </section>
-
-      {/* Features */}
-      <section id="features" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
-            Built for owners who'd rather <span className="text-gradient">play than debug</span>
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            One workflow, four plugins, zero `mapping values are not allowed here` errors.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-5">
-          <Feature
-            icon={<Layers className="size-5" />}
-            title="Auto-detect plugin"
-            body="Drop a YAML in — we identify whether it's LuckPerms, Essentials, TAB or DeluxeMenus and adapt the editor."
-          />
-          <Feature
-            icon={<Eye className="size-5" />}
-            title="Live preview"
-            body="Every toggle, slider and field updates the output instantly. No save dance, no surprises."
-          />
-          <Feature
-            icon={<ShieldCheck className="size-5" />}
-            title="Syntax-safe export"
-            body="Output is always valid YAML with proper indentation. Drop it in your plugins folder and reload."
-          />
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="relative z-10 max-w-3xl mx-auto px-6 py-20 text-center">
-        <h2 className="font-display text-4xl md:text-5xl font-bold tracking-tight">
-          One price. <span className="text-gradient">Forever.</span>
-        </h2>
-        <p className="mt-3 text-muted-foreground">No subscriptions. No upsells. Updates included.</p>
-
-        <div className="mt-10 glass rounded-3xl p-8 md:p-10 text-left max-w-lg mx-auto relative overflow-hidden">
-          <div className="absolute -top-20 -right-20 size-60 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
-          <div className="relative">
-            <div className="flex items-center gap-2 text-xs font-medium text-primary uppercase tracking-wider">
-              <Sparkles className="size-3" /> Lifetime License
+        {/* Sidebar */}
+        <aside className="relative z-10 w-64 shrink-0 border-r border-border/40 bg-background/40 backdrop-blur-xl flex flex-col">
+          <div className="p-4 border-b border-border/40">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+              Supported plugins
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="font-display text-6xl font-bold">$5.97</span>
-              <span className="text-muted-foreground line-through text-lg">$24</span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search…"
+              className="w-full text-xs bg-muted/30 border border-border/50 rounded-md px-2.5 py-1.5 outline-none focus:border-primary/50 focus:bg-muted/50 transition-colors"
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+            {Object.entries(grouped).map(([cat, plugins], i) => (
+              <motion.div
+                key={cat}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.03 }}
+              >
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold px-2 mb-1.5">
+                  {CATEGORY_LABEL[cat] ?? cat}
+                </div>
+                <ul className="space-y-0.5">
+                  {plugins.map((p) => (
+                    <li
+                      key={p.id}
+                      className="px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-muted/50 hover:text-foreground transition-colors cursor-default flex items-center justify-between group"
+                    >
+                      <span>{p.name}</span>
+                      <span className="text-[9px] uppercase font-semibold text-muted-foreground/60 group-hover:text-primary transition-colors">
+                        {p.format}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+            {Object.keys(grouped).length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-8">No plugins match.</div>
+            )}
+          </div>
+          <div className="p-3 border-t border-border/40">
+            <div className="rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 p-3">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-semibold text-primary mb-1">
+                <Sparkles className="size-3" /> Pro
+              </div>
+              <div className="text-xs text-foreground/90 leading-snug">
+                Lifetime license, all plugins, future updates.
+              </div>
+              <div className="mt-2 flex items-baseline gap-1.5">
+                <span className="font-display text-xl font-bold">{cfg.pricing.price}</span>
+                <span className="text-[11px] text-muted-foreground line-through">{cfg.pricing.compareAt}</span>
+              </div>
             </div>
-            <ul className="mt-6 space-y-2.5 text-sm">
-              {[
-                "Unlimited configs across all plugins",
-                "Auto-detect & smart UI for any YAML",
-                "Live preview + one-click export",
-                "Free updates as new plugins are added",
-                "Works offline in your browser",
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <div className="mt-0.5 size-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                    <div className="size-1.5 rounded-full bg-primary" />
-                  </div>
-                  <span className="text-foreground/90">{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Button className="mt-8 w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold glow-primary">
-              Get ForgeYAML — $5.97
-            </Button>
-            <p className="mt-3 text-xs text-center text-muted-foreground">
-              30-day refund · pay once, use forever
-            </p>
           </div>
-        </div>
-      </section>
+        </aside>
 
-      <footer className="relative z-10 border-t border-border/40 py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="size-5 rounded-md bg-gradient-to-br from-primary to-accent" />
-            <span className="font-display font-semibold text-foreground">ForgeYAML</span>
-          </div>
-          <p>© {new Date().getFullYear()} ForgeYAML. Not affiliated with Mojang.</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      className="glass rounded-2xl p-6 hover:border-primary/30 transition-colors group"
-    >
-      <div className="size-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 group-hover:glow-primary transition-shadow">
-        {icon}
+        {/* Workspace */}
+        <main className="relative z-10 flex-1 overflow-auto p-5">
+          <ConfigStudio />
+        </main>
       </div>
-      <h3 className="font-display font-semibold text-lg">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{body}</p>
-    </motion.div>
+    </div>
   );
 }
