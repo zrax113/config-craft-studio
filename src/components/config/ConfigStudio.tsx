@@ -689,31 +689,54 @@ function styleValue(v: string): React.ReactNode {
 
 /** Pack file picker — when the loaded plugin belongs to a multi-file pack
  *  (e.g. EssentialsX with config.yml + messages.yml + kits.yml…), render a
- *  VS-Code-like row of file tabs so the user can hop between related files. */
+ *  VS-Code-like row of file tabs so the user can hop between related files.
+ *  `extraSampleIds` lets the sidebar's "Load all" override the static pack
+ *  with the live manifest contents (covers freshly-added files). */
 function PackFilePicker({
   detectionId,
+  currentSampleId,
+  extraSampleIds,
   onPick,
 }: {
   detectionId?: PluginId;
-  onPick: (sampleId: PluginId) => void | Promise<void>;
+  currentSampleId?: string;
+  extraSampleIds?: string[];
+  onPick: (sampleId: string) => void | Promise<void>;
 }) {
-  if (!detectionId || detectionId === "unknown") return null;
-  const packKey = packForPlugin(detectionId);
-  if (!packKey) return null;
-  const pack = PLUGIN_PACKS[packKey];
+  type Tab = { sampleId: string; filename: string };
+  let tabs: Tab[] = [];
+  let label = "Files";
+  if (extraSampleIds?.length) {
+    tabs = extraSampleIds.map((id) => ({ sampleId: id, filename: id }));
+    label = "Loaded files";
+  } else if (detectionId && detectionId !== "unknown") {
+    const packKey = packForPlugin(detectionId);
+    if (packKey) {
+      const pack = PLUGIN_PACKS[packKey];
+      tabs = pack.files.map((f) => ({ sampleId: f.sampleId, filename: f.filename }));
+      label = `${pack.name} files`;
+    }
+  }
+  if (tabs.length === 0) return null;
+  const active = currentSampleId ?? detectionId;
   return (
-    <div className="mb-3 -mt-1 flex items-center gap-1.5 overflow-x-auto pb-1">
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="mb-3 -mt-1 flex items-center gap-1.5 overflow-x-auto pb-1"
+    >
       <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold shrink-0 flex items-center gap-1">
-        <Files className="size-3" /> {pack.name} files
+        <Files className="size-3" /> {label}
       </span>
       <div className="flex gap-1 shrink-0">
-        {pack.files.map((f) => (
+        {tabs.map((f) => (
           <button
             key={f.sampleId}
             onClick={() => onPick(f.sampleId)}
             className={`text-[11px] px-2 py-1 rounded-md border transition-all whitespace-nowrap ${
-              f.sampleId === detectionId
-                ? "bg-primary/15 border-primary/40 text-primary"
+              f.sampleId === active
+                ? "bg-primary/15 border-primary/40 text-primary shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.3)]"
                 : "bg-muted/30 border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
             }`}
           >
@@ -721,6 +744,6 @@ function PackFilePicker({
           </button>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
