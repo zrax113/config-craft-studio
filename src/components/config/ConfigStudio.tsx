@@ -13,9 +13,8 @@ function setDeep(obj: any, path: string[], value: any): any {
   const [head, ...rest] = path;
   const isArrayIdx = /^\d+$/.test(head);
   const clone = Array.isArray(obj) ? [...obj] : { ...(obj ?? {}) };
-  const key = isArrayIdx ? Number(head) : head;
-  // @ts-expect-error dynamic
-  clone[key] = setDeep(obj?.[key], rest, value);
+  const key: any = isArrayIdx ? Number(head) : head;
+  (clone as any)[key] = setDeep((obj as any)?.[key], rest, value);
   return clone;
 }
 
