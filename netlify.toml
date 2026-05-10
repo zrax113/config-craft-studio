@@ -1,0 +1,24 @@
+# Netlify deployment — fallback target if Vercel ever breaks.
+# Setup: connect the repo on Netlify, accept the auto-detected settings,
+# and the build produces a fully working static SPA in dist/client/.
+
+[build]
+  command = "bun run build && node scripts/prerender.mjs"
+  publish = "dist/client"
+
+# SPA rewrite — every non-asset path serves the prerendered index.html
+# and the TanStack Router hydrates client-side from there.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/configs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300, must-revalidate"
