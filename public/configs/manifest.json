@@ -1,0 +1,8 @@
+{
+  "$comment": "Override or add bundled samples by dropping YAML/TOML files into this folder. Listed entries take precedence over the in-bundle defaults at src/lib/sample-configs.ts. See README.md.",
+  "samples": {
+    "essentials": { "label": "EssentialsX · config.yml", "format": "yaml", "path": "essentialsx/config.yml" },
+    "essentials_messages": { "label": "EssentialsX · messages_en.yml", "format": "yaml", "path": "essentialsx/messages_en.yml" },
+    "essentials_kits": { "label": "EssentialsX · kits.yml", "format": "yaml", "path": "essentialsx/kits.yml" }
+  }
+}
