@@ -79,10 +79,45 @@ export function ConfigStudio() {
     }
   }, [edited, format]);
 
+  const schemaIssues: SchemaIssue[] = useMemo(() => {
+    if (!detection || detection.id === "unknown" || !edited) return [];
+    return validateAgainstSchema(detection.id, edited);
+  }, [detection, edited]);
+
   function applySample(content: string, fmt: "yaml" | "toml" | "json") {
     setFormat(fmt);
     setFilename(undefined);
     setRaw(content);
+  }
+
+  async function exportPack() {
+    if (!detection) return;
+    const packKey = packForPlugin(detection.id);
+    if (!packKey) {
+      toast.error("No pack available", {
+        description: "This plugin doesn't ship a multi-file pack.",
+      });
+      return;
+    }
+    const pack = PLUGIN_PACKS[packKey];
+    let count = 0;
+    for (const f of pack.files) {
+      const sample = await loadSample(f.sampleId);
+      if (!sample) continue;
+      const blob = new Blob([sample.content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = f.filename.replace(/\//g, "_");
+      a.click();
+      URL.revokeObjectURL(url);
+      count++;
+      // Tiny delay so browsers don't drop concurrent downloads
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    toast.success(`Exported ${count} files`, {
+      description: `${pack.name} pack ready in your Downloads folder.`,
+    });
   }
 
   // Listen for sidebar plugin clicks — uses the public/configs override system
