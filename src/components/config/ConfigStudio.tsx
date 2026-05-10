@@ -21,6 +21,8 @@ import {
   Wand2,
   CheckCircle2,
   RotateCcw,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
