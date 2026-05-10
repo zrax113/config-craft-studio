@@ -53,7 +53,9 @@ export function ConfigStudio() {
   const edited = editedHistory.value;
   const [format, setFormat] = useState<ConfigFormat>("yaml");
   const [filename, setFilename] = useState<string | undefined>();
+  const [currentSampleId, setCurrentSampleId] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
+  const [packIds, setPackIds] = useState<string[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const outputScrollRef = useRef<HTMLPreElement>(null);
@@ -85,13 +87,19 @@ export function ConfigStudio() {
   }, [edited, format]);
 
   const schemaIssues: SchemaIssue[] = useMemo(() => {
-    if (!detection || detection.id === "unknown" || !edited) return [];
-    return validateAgainstSchema(detection.id, edited);
-  }, [detection, edited]);
+    if (!edited) return [];
+    return validateAgainstSchema(
+      { sampleId: currentSampleId, pluginId: detection && detection.id !== "unknown" ? detection.id : undefined },
+      edited,
+    );
+  }, [detection, edited, currentSampleId]);
 
-  function applySample(content: string, fmt: "yaml" | "toml" | "json") {
+  const stats = useMemo(() => (edited ? analyzeConfig(edited) : null), [edited]);
+
+  function applySample(content: string, fmt: "yaml" | "toml" | "json", sampleId?: string) {
     setFormat(fmt);
     setFilename(undefined);
+    setCurrentSampleId(sampleId);
     setRaw(content);
   }
 
