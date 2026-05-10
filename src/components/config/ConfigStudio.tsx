@@ -364,7 +364,7 @@ function Panel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass rounded-2xl p-4 flex flex-col min-h-[60vh] relative"
+      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] relative"
     >
       <header className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/40">
         <div className="flex items-center gap-2.5 min-w-0">
