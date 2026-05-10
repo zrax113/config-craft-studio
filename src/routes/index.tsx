@@ -1,17 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ConfigStudio } from "@/components/config/ConfigStudio";
 import { useBrandConfig } from "@/lib/brand-config";
-import { PLUGIN_LIST } from "@/lib/plugin-detect";
-import { Bolt, Github, Keyboard, Search, Menu, PanelLeftClose, PanelLeftOpen, GraduationCap } from "lucide-react";
-import { useState } from "react";
+import { PLUGIN_LIST, type PluginId } from "@/lib/plugin-detect";
+import {
+  Bolt,
+  Github,
+  Keyboard,
+  Search,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  GraduationCap,
+  ChevronRight,
+  FileText,
+  Layers,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { emitLoadPlugin } from "@/lib/plugin-bus";
+import { emitLoadPlugin, emitLoadPack } from "@/lib/plugin-bus";
+import { getSamplesForPlugin, getManifest, type PluginSampleRef } from "@/lib/sample-loader";
 import { Onboarding } from "@/components/config/Onboarding";
 
 export const Route = createFileRoute("/")({
@@ -59,6 +72,76 @@ function PluginList({
   setSearch: (v: string) => void;
   onPick?: () => void;
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [samplesById, setSamplesById] = useState<Record<string, PluginSampleRef[]>>({});
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync the manifest periodically so newly added files in public/configs
+  // appear without a hard reload.
+  useEffect(() => {
+    let alive = true;
+    const refresh = async () => {
+      const m = await getManifest(true);
+      if (!alive) return;
+      // Invalidate cached sample lists so expanded folders pick up new files.
+      setSamplesById((prev) => {
+        const next: Record<string, PluginSampleRef[]> = {};
+        for (const id of Object.keys(prev)) {
+          // recompute lazily on next expand
+          void m;
+        }
+        return next;
+      });
+    };
+    const t = setInterval(refresh, 15000);
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      alive = false;
+      clearInterval(t);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
+  const ensureSamples = async (id: PluginId) => {
+    if (samplesById[id]) return samplesById[id];
+    const refs = await getSamplesForPlugin(id);
+    setSamplesById((prev) => ({ ...prev, [id]: refs }));
+    return refs;
+  };
+
+  const handleSingleClick = async (id: PluginId) => {
+    setExpanded((cur) => (cur === id ? null : id));
+    await ensureSamples(id);
+  };
+
+  const handleDoubleClick = async (id: PluginId) => {
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+    }
+    setLoadingId(id);
+    const refs = await ensureSamples(id);
+    if (refs.length > 1) emitLoadPack(refs.map((r) => r.id));
+    else emitLoadPlugin(id);
+    setLoadingId(null);
+    onPick?.();
+  };
+
+  const onPluginClick = (id: PluginId) => {
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+      handleDoubleClick(id);
+      return;
+    }
+    clickTimer.current = setTimeout(() => {
+      clickTimer.current = null;
+      handleSingleClick(id);
+    }, 220);
+  };
+
   const grouped = PLUGIN_LIST.reduce<Record<string, typeof PLUGIN_LIST>>((acc, p) => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return acc;
     (acc[p.category] ??= [] as any).push(p);
@@ -78,11 +161,15 @@ function PluginList({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search…"
             className="h-8 pl-8 text-xs bg-muted/30 border-border/50"
+            aria-label="Search plugins"
           />
+        </div>
+        <div className="text-[10px] text-muted-foreground/70 leading-snug">
+          Click to browse files · Double-click to load all
         </div>
       </div>
       <ScrollArea className="flex-1">
-        <div className="py-3 px-2 space-y-4">
+        <nav aria-label="Plugin library" className="py-3 px-2 space-y-4">
           {Object.entries(grouped).map(([cat, plugins], i) => (
             <motion.div
               key={cat}
@@ -94,33 +181,102 @@ function PluginList({
                 {CATEGORY_LABEL[cat] ?? cat}
               </div>
               <ul className="space-y-0.5">
-                {plugins.map((p) => (
-                  <li key={p.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        emitLoadPlugin(p.id);
-                        onPick?.();
-                      }}
-                      className="w-full text-left px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-primary/10 hover:text-foreground hover:ring-1 hover:ring-primary/30 active:scale-[0.98] transition-all flex items-center justify-between gap-2 group"
-                    >
-                      <span className="truncate min-w-0">{p.name}</span>
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] uppercase font-medium border-border/50 text-muted-foreground/70 group-hover:text-primary group-hover:border-primary/40 transition-colors h-4 px-1 shrink-0"
+                {plugins.map((p) => {
+                  const isExpanded = expanded === p.id;
+                  const refs = samplesById[p.id] ?? [];
+                  return (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => onPluginClick(p.id as PluginId)}
+                        onDoubleClick={(e) => {
+                          e.preventDefault();
+                          handleDoubleClick(p.id as PluginId);
+                        }}
+                        aria-expanded={isExpanded}
+                        title={`Click to view files · Double-click to load all of ${p.name}`}
+                        className="w-full text-left px-2 py-1.5 rounded-md text-xs text-foreground/80 hover:bg-primary/10 hover:text-foreground hover:ring-1 hover:ring-primary/30 active:scale-[0.98] transition-all flex items-center gap-2 group"
                       >
-                        {p.format}
-                      </Badge>
-                    </button>
-                  </li>
-                ))}
+                        <ChevronRight
+                          className={`size-3 shrink-0 text-muted-foreground/60 transition-transform ${
+                            isExpanded ? "rotate-90 text-primary" : ""
+                          }`}
+                        />
+                        <span className="truncate min-w-0 flex-1">{p.name}</span>
+                        {loadingId === p.id ? (
+                          <span className="text-[9px] text-primary animate-pulse">…</span>
+                        ) : null}
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] uppercase font-medium border-border/50 text-muted-foreground/70 group-hover:text-primary group-hover:border-primary/40 transition-colors h-4 px-1 shrink-0"
+                        >
+                          {p.format}
+                        </Badge>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.ul
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                            className="overflow-hidden ml-4 mt-0.5 border-l border-border/40 pl-2 space-y-0.5"
+                          >
+                            {refs.length === 0 ? (
+                              <li className="text-[10px] text-muted-foreground/60 italic px-2 py-1">
+                                No bundled config files.
+                              </li>
+                            ) : (
+                              <>
+                                {refs.length > 1 && (
+                                  <li>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        emitLoadPack(refs.map((r) => r.id));
+                                        onPick?.();
+                                      }}
+                                      className="w-full text-left px-2 py-1 rounded-md text-[10.5px] text-primary/90 hover:bg-primary/10 hover:text-primary flex items-center gap-1.5 transition-colors"
+                                    >
+                                      <Layers className="size-3" />
+                                      Load all {refs.length} files
+                                    </button>
+                                  </li>
+                                )}
+                                {refs.map((r) => (
+                                  <li key={r.id}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        emitLoadPlugin(r.id);
+                                        onPick?.();
+                                      }}
+                                      className="w-full text-left px-2 py-1 rounded-md text-[10.5px] text-foreground/70 hover:bg-muted/40 hover:text-foreground flex items-center gap-1.5 transition-colors"
+                                      title={r.path}
+                                    >
+                                      <FileText className="size-3 shrink-0 text-muted-foreground/70" />
+                                      <span className="truncate">{r.filename}</span>
+                                      <span className="ml-auto text-[9px] uppercase text-muted-foreground/60 shrink-0">
+                                        {r.format}
+                                      </span>
+                                    </button>
+                                  </li>
+                                ))}
+                              </>
+                            )}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
+                    </li>
+                  );
+                })}
               </ul>
             </motion.div>
           ))}
           {Object.keys(grouped).length === 0 && (
             <div className="text-xs text-muted-foreground text-center py-8">No plugins match.</div>
           )}
-        </div>
+        </nav>
       </ScrollArea>
       <Separator />
       <div className="p-3 text-[10px] text-muted-foreground/70 leading-relaxed">
