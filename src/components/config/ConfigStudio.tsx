@@ -145,7 +145,9 @@ export function ConfigStudio() {
 
   function reset() {
     setRaw("");
-    setEdited(null);
+    editedHistory.reset(null);
+    setFilename(undefined);
+  }
     setFilename(undefined);
   }
 
