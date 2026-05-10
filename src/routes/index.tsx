@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ConfigStudio } from "@/components/config/ConfigStudio";
 import { useBrandConfig } from "@/lib/brand-config";
 import { PLUGIN_LIST } from "@/lib/plugin-detect";
-import { Bolt, Github, Keyboard, Search, Menu, X } from "lucide-react";
+import { Bolt, Github, Keyboard, Search, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -134,6 +134,7 @@ function Studio() {
   const cfg = useBrandConfig();
   const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -150,6 +151,18 @@ function Studio() {
             <PluginList search={search} setSearch={setSearch} onPick={() => setMobileOpen(false)} />
           </SheetContent>
         </Sheet>
+
+        {/* Desktop sidebar collapse toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden md:flex size-8 shrink-0"
+          onClick={() => setDesktopCollapsed((c) => !c)}
+          title={desktopCollapsed ? "Show plugin list" : "Hide plugin list"}
+          aria-label={desktopCollapsed ? "Show plugin list" : "Hide plugin list"}
+        >
+          {desktopCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </Button>
 
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="size-8 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 border border-primary/30 text-primary flex items-center justify-center pulse-glow shrink-0">
@@ -184,9 +197,16 @@ function Studio() {
       <div className="flex-1 flex min-h-0 relative">
         <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
 
-        {/* Sidebar (desktop) */}
-        <aside className="hidden md:flex relative z-10 w-60 xl:w-64 2xl:w-72 shrink-0 border-r border-border/40 bg-background/30 backdrop-blur-xl flex-col">
-          <PluginList search={search} setSearch={setSearch} />
+        {/* Sidebar (desktop) — animated collapse */}
+        <aside
+          className={`hidden md:flex relative z-10 shrink-0 border-r border-border/40 bg-background/30 backdrop-blur-xl flex-col overflow-hidden transition-[width] duration-300 ease-out ${
+            desktopCollapsed ? "w-0 border-r-0" : "w-60 xl:w-64 2xl:w-72"
+          }`}
+          aria-hidden={desktopCollapsed}
+        >
+          <div className="w-60 xl:w-64 2xl:w-72 h-full flex flex-col">
+            <PluginList search={search} setSearch={setSearch} />
+          </div>
         </aside>
 
         {/* Workspace */}
@@ -198,5 +218,7 @@ function Studio() {
         </main>
       </div>
     </div>
+  );
+}
   );
 }
