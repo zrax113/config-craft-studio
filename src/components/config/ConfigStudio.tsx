@@ -454,20 +454,21 @@ export function ConfigStudio() {
         icon={<Download className="size-4" />}
         delay={0.1}
         accessory={
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap justify-end">
             <Button
               size="sm"
               variant="ghost"
               onClick={copyOut}
               disabled={!yamlOut}
               className="h-8 px-2"
+              title="Copy (⌘⇧C)"
             >
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 {copied ? (
                   <motion.span
                     key="ok"
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    initial={{ scale: 0.6, opacity: 0, rotate: -20 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
                     exit={{ scale: 0.6, opacity: 0 }}
                   >
                     <Check className="size-4 text-success" />
@@ -492,16 +493,19 @@ export function ConfigStudio() {
                 className="h-8 px-2 text-xs"
                 title="Export every related file (config, messages, kits…)"
               >
-                <Package className="size-3.5 mr-1.5" /> Pack
+                <Package className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">Pack</span>
               </Button>
             )}
             <Button
               size="sm"
               onClick={downloadOut}
               disabled={!yamlOut}
-              className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="h-8 px-2 sm:px-3 bg-primary hover:bg-primary/90 text-primary-foreground"
+              title="Export (⌘S)"
             >
-              <Download className="size-3.5 mr-1.5" /> Export
+              <Download className="size-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         }
@@ -513,6 +517,15 @@ export function ConfigStudio() {
             <span className="text-muted-foreground/60">// your config will appear here</span>
           )}
         </pre>
+        {yamlOut && (
+          <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold px-1">
+            <span>{yamlOut.split("\n").length} lines</span>
+            <span className="opacity-40">·</span>
+            <span>{yamlOut.length.toLocaleString()} chars</span>
+            <span className="opacity-40">·</span>
+            <span>{(new Blob([yamlOut]).size / 1024).toFixed(1)} kb</span>
+          </div>
+        )}
         <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
     </div>
