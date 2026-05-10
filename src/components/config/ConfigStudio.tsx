@@ -593,13 +593,30 @@ function Panel({
   children: React.ReactNode;
   delay?: number;
 }) {
+  const [maximized, setMaximized] = useState(false);
+
+  // Esc to exit fullscreen
+  useEffect(() => {
+    if (!maximized) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMaximized(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [maximized]);
+
   return (
     <motion.section
+      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ borderColor: "transparent" }}
-      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
+      className={
+        maximized
+          ? "glass glass-shine rounded-2xl p-4 flex flex-col fixed inset-2 sm:inset-4 z-50 min-w-0 shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.4),0_40px_120px_-20px_oklch(0_0_0_/_0.8)] animate-scale-in"
+          : "glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
+      }
     >
       <header className="flex items-center justify-between gap-2 flex-wrap pb-3 mb-3 border-b border-border/40">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -611,7 +628,19 @@ function Panel({
             <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>{subtitle}</p>
           </div>
         </div>
-        {accessory && <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">{accessory}</div>}
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+          {accessory}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2"
+            onClick={() => setMaximized((m) => !m)}
+            aria-label={maximized ? "Exit fullscreen" : "Enter fullscreen"}
+            title={maximized ? "Exit fullscreen (Esc)" : "Fullscreen this panel"}
+          >
+            {maximized ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+          </Button>
+        </div>
       </header>
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </motion.section>
