@@ -423,6 +423,17 @@ export function ConfigStudio() {
                 )}
               </AnimatePresence>
             </Button>
+            {detection && packForPlugin(detection.id) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={exportPack}
+                className="h-8 px-2 text-xs"
+                title="Export every related file (config, messages, kits…)"
+              >
+                <Package className="size-3.5 mr-1.5" /> Pack
+              </Button>
+            )}
             <Button
               size="sm"
               onClick={downloadOut}
