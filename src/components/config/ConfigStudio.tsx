@@ -195,7 +195,7 @@ export function ConfigStudio() {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] h-full">
+    <div className="grid gap-5 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] 2xl:gap-6 h-full min-h-0">
       {/* Input panel */}
       <Panel
         title="Input"
