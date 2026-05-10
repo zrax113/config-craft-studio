@@ -1,0 +1,34 @@
+kits:
+  starter:
+    delay: 10
+    items:
+      - stone_sword unbreaking:1
+      - bread 16
+      - leather_helmet
+      - leather_chestplate
+      - leather_leggings
+      - leather_boots
+  miner:
+    delay: 600
+    items:
+      - iron_pickaxe efficiency:2 unbreaking:2
+      - iron_shovel efficiency:2
+      - torch 64
+      - bread 32
+  pvp:
+    delay: 1800
+    items:
+      - diamond_sword sharpness:3 unbreaking:3
+      - golden_apple 8
+      - cooked_beef 32
+      - diamond_helmet protection:2
+      - diamond_chestplate protection:2
+      - diamond_leggings protection:2
+      - diamond_boots feather_falling:3
+  builder:
+    delay: 3600
+    items:
+      - cobblestone 256
+      - oak_planks 128
+      - glass 64
+      - oak_door 8

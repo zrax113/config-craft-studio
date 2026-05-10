@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser";
 import { detectPlugin, type DetectionResult, PLUGIN_LIST } from "@/lib/plugin-detect";
-import { SAMPLES, SAMPLE_LIST } from "@/lib/sample-configs";
+import { SAMPLE_LIST } from "@/lib/sample-configs";
+import { loadSample } from "@/lib/sample-loader";
 import { onLoadPlugin } from "@/lib/plugin-bus";
 import { toast } from "sonner";
 import { FieldEditor } from "./FieldEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ScrollToTop } from "./ScrollToTop";
 import { useHistory } from "@/hooks/useHistory";
+import { validateAgainstSchema, type SchemaIssue } from "@/lib/schema";
+import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
 import {
   Check,
   Copy,
@@ -23,6 +26,8 @@ import {
   RotateCcw,
   Undo2,
   Redo2,
+  Package,
+  AlertTriangle,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
 
@@ -74,19 +79,54 @@ export function ConfigStudio() {
     }
   }, [edited, format]);
 
-  function loadSample(content: string, fmt: "yaml" | "toml") {
+  const schemaIssues: SchemaIssue[] = useMemo(() => {
+    if (!detection || detection.id === "unknown" || !edited) return [];
+    return validateAgainstSchema(detection.id, edited);
+  }, [detection, edited]);
+
+  function applySample(content: string, fmt: "yaml" | "toml" | "json") {
     setFormat(fmt);
     setFilename(undefined);
     setRaw(content);
   }
 
-  // Listen for sidebar plugin clicks
+  async function exportPack() {
+    if (!detection) return;
+    const packKey = packForPlugin(detection.id);
+    if (!packKey) {
+      toast.error("No pack available", {
+        description: "This plugin doesn't ship a multi-file pack.",
+      });
+      return;
+    }
+    const pack = PLUGIN_PACKS[packKey];
+    let count = 0;
+    for (const f of pack.files) {
+      const sample = await loadSample(f.sampleId);
+      if (!sample) continue;
+      const blob = new Blob([sample.content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = f.filename.replace(/\//g, "_");
+      a.click();
+      URL.revokeObjectURL(url);
+      count++;
+      // Tiny delay so browsers don't drop concurrent downloads
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    toast.success(`Exported ${count} files`, {
+      description: `${pack.name} pack ready in your Downloads folder.`,
+    });
+  }
+
+  // Listen for sidebar plugin clicks — uses the public/configs override system
   useEffect(() => {
-    const off = onLoadPlugin((id) => {
-      const sample = SAMPLES[id];
+    const off = onLoadPlugin(async (id) => {
       const meta = PLUGIN_LIST.find((p) => p.id === id);
+      const sample = await loadSample(id);
       if (sample) {
-        loadSample(sample.content, sample.format);
+        applySample(sample.content, sample.format);
         toast.success(`Loaded ${sample.label}`, {
           description: "Default config inserted — edit & export.",
         });
@@ -96,7 +136,9 @@ export function ConfigStudio() {
         });
       }
     });
-    return () => { off(); };
+    return () => {
+      off();
+    };
   }, []);
 
   // Keyboard shortcuts: Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo
@@ -153,7 +195,7 @@ export function ConfigStudio() {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] h-full">
+    <div className="grid gap-5 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] 2xl:gap-6 h-full min-h-0">
       {/* Input panel */}
       <Panel
         title="Input"
@@ -243,12 +285,12 @@ export function ConfigStudio() {
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-semibold">
               Try a sample
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 whitespace-nowrap">
               {SAMPLE_LIST.map(([id, s]) => (
                 <button
                   key={id}
-                  onClick={() => loadSample(s.content, s.format)}
-                  className="text-[11px] px-2 py-1 rounded-md bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all border border-border/50 hover:border-primary/30"
+                  onClick={() => applySample(s.content, s.format)}
+                  className="text-[11px] px-2 py-1 rounded-md bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all border border-border/50 hover:border-primary/30 shrink-0"
                 >
                   {s.label}
                 </button>
@@ -302,7 +344,7 @@ export function ConfigStudio() {
           </div>
         }
       >
-        <div ref={editorScrollRef} className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
+        <div ref={editorScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden pr-1 -mr-1 min-h-0 min-w-0">
           {!edited ? (
             <EmptyState />
           ) : (
@@ -311,8 +353,30 @@ export function ConfigStudio() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25 }}
-              className="space-y-1"
+              className="space-y-1 min-w-0"
             >
+              {schemaIssues.length > 0 && (
+                <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 p-2.5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warning uppercase tracking-wider">
+                    <AlertTriangle className="size-3.5" />
+                    Schema check · {schemaIssues.length} issue{schemaIssues.length === 1 ? "" : "s"}
+                  </div>
+                  <ul className="text-[11px] space-y-0.5 text-muted-foreground">
+                    {schemaIssues.slice(0, 6).map((iss, i) => (
+                      <li key={i} className="flex gap-1.5">
+                        <span
+                          className={
+                            iss.level === "error" ? "text-destructive font-semibold" : "text-warning font-semibold"
+                          }
+                        >
+                          {iss.level === "error" ? "ERR" : "WARN"}
+                        </span>
+                        <span className="break-words">{iss.message}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {Object.entries(edited).map(([k, v]) => (
                 <FieldEditor key={k} path={[k]} value={v} onChange={update} />
               ))}
@@ -359,6 +423,17 @@ export function ConfigStudio() {
                 )}
               </AnimatePresence>
             </Button>
+            {detection && packForPlugin(detection.id) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={exportPack}
+                className="h-8 px-2 text-xs"
+                title="Export every related file (config, messages, kits…)"
+              >
+                <Package className="size-3.5 mr-1.5" /> Pack
+              </Button>
+            )}
             <Button
               size="sm"
               onClick={downloadOut}
@@ -403,7 +478,7 @@ function Panel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] relative"
+      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0"
     >
       <header className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/40">
         <div className="flex items-center gap-2.5 min-w-0">
