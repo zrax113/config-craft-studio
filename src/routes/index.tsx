@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ConfigStudio } from "@/components/config/ConfigStudio";
 import { useBrandConfig } from "@/lib/brand-config";
 import { PLUGIN_LIST } from "@/lib/plugin-detect";
-import { Bolt, Github, Keyboard, Search, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bolt, Github, Keyboard, Search, Menu, PanelLeftClose, PanelLeftOpen, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
