@@ -175,12 +175,22 @@ function Studio() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30 px-2.5 py-1 rounded-md border border-border/40">
+          <div className="hidden xl:flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30 px-2.5 py-1 rounded-md border border-border/40">
             <Keyboard className="size-3" />
             <kbd className="font-mono">⌘Z</kbd> undo
             <span className="opacity-40">·</span>
             <kbd className="font-mono">Tab</kbd> indent
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => window.dispatchEvent(new Event("forgeyaml:open-tutorial"))}
+            title="Open the in-depth tutorial"
+          >
+            <GraduationCap className="size-3.5" />
+            <span className="hidden sm:inline">Tutorial</span>
+          </Button>
           <a
             href="https://github.com"
             target="_blank"
