@@ -1,0 +1,62 @@
+# EssentialsX — config.yml
+# Trimmed default. Replace this file in public/configs/essentialsx/ to update
+# the studio's reference config without rebuilding.
+
+nickname-prefix: '~'
+op-prefix: '&4[Op]&f'
+hide-displayname-in-vanish: true
+
+teleport-cooldown: 0
+teleport-delay: 0
+teleport-invulnerability: 4
+cancel-afk-on-move: true
+cancel-afk-on-interact: true
+auto-afk: 300
+auto-afk-kick: -1
+
+heal-cooldown: 60
+command-cooldowns:
+  pay: 5
+  sethome: 60
+  tpa: 5
+
+currency-symbol: '$'
+max-money: 10000000000000
+min-money: -10000
+starting-balance: 1000
+currency-format: '#,##0.00'
+locale: en
+
+ops-name-color: c
+debug: false
+spawn-on-join: false
+respawn-at-home: false
+update-bed-at-daytime: true
+
+homes-per-player: 3
+
+socialspy-by-default: false
+muted-players-can-still-use-socialspy: false
+
+chat:
+  format: '<{DISPLAYNAME}> {MESSAGE}'
+  group-formats:
+    Owner: '&8[&4{GROUP}&8]&f {DISPLAYNAME}: &7{MESSAGE}'
+    Admin: '&8[&c{GROUP}&8]&f {DISPLAYNAME}: &7{MESSAGE}'
+    Default: '&7{DISPLAYNAME}&8»&7 {MESSAGE}'
+  radius: 0
+  shout-format: '&6[Shout]&f {DISPLAYNAME}: &7{MESSAGE}'
+
+backup:
+  interval: 30
+  command: ''
+
+economy:
+  log-enabled: false
+
+death-messages: true
+remove-effects-on-death: true
+spawn-if-no-home: false
+hide-permissionless-help: true
+disabled-commands: []
+overridden-commands: []

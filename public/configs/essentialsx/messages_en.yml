@@ -1,0 +1,37 @@
+# EssentialsX — messages_en.yml (excerpt)
+noPerm: '\u00a74You do not have permission to access that command.'
+noAccessCommand: '\u00a74You do not have access to that command.'
+noAccessPermission: '\u00a74You do not have permission to access \u00a7c{0}\u00a74.'
+
+balance: '\u00a7aBalance:\u00a7c {0}'
+balanceOther: '\u00a7aBalance of {0}:\u00a7c {1}'
+balanceTop: '\u00a76Top balances ({0})'
+
+teleport: '\u00a76Teleporting...'
+teleportAtoB: '\u00a76{0}\u00a76 teleported you to {1}\u00a76.'
+teleportToPlayer: '\u00a76Teleporting to \u00a7c{0}\u00a76.'
+
+requestSent: '\u00a76Request sent to \u00a7c{0}\u00a76.'
+requestAccepted: '\u00a76Teleport request accepted.'
+requestDenied: '\u00a76Teleport request denied.'
+
+kitGiven: '\u00a76Giving kit \u00a7c{0}\u00a76.'
+kitNotFound: '\u00a74That kit does not exist.'
+
+homes: '\u00a76Homes: {0}'
+homeSet: '\u00a76Home set to current location.'
+deleteHome: '\u00a76Home \u00a7c{0}\u00a76 has been removed.'
+
+warps: '\u00a76Warps: {0}'
+warpSet: '\u00a76Warp \u00a7c{0}\u00a76 has been set.'
+warpingTo: '\u00a76Warping to \u00a7c{0}\u00a76.'
+
+moneyTaken: '\u00a7c{0}\u00a76 has been taken from your account.'
+moneyAdded: '\u00a7a{0}\u00a76 has been given to {1}.'
+insufficientFunds: '\u00a74Insufficient funds.'
+
+playerMuted: '\u00a76You have been muted'
+playerUnmuted: '\u00a76You are no longer muted'
+
+unknownCommand: '\u00a74Unknown command. Type "/help" for help.'
+errorWithMessage: '\u00a74Error: {0}'
