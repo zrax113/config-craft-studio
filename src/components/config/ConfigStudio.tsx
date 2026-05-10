@@ -313,13 +313,18 @@ export function ConfigStudio() {
           </div>
         </div>
 
-        <PackFilePicker detectionId={detection?.id} onPick={async (sampleId) => {
-          const sample = await loadSample(sampleId);
-          if (sample) {
-            applySample(sample.content, sample.format);
-            toast.success(`Loaded ${sample.label}`);
-          }
-        }} />
+        <PackFilePicker
+          detectionId={detection?.id}
+          currentSampleId={currentSampleId}
+          extraSampleIds={packIds ?? undefined}
+          onPick={async (sampleId) => {
+            const sample = await loadSample(sampleId);
+            if (sample) {
+              applySample(sample.content, sample.format, sampleId);
+              toast.success(`Loaded ${sample.label}`);
+            }
+          }}
+        />
 
         <CodeEditor
           value={raw}
