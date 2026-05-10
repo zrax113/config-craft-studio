@@ -539,19 +539,20 @@ function Panel({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0"
+      whileHover={{ borderColor: "transparent" }}
+      className="glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
     >
-      <header className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/40">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <header className="flex items-center justify-between gap-2 flex-wrap pb-3 mb-3 border-b border-border/40">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
             {icon}
           </div>
-          <div className="min-w-0">
-            <h3 className="font-display text-sm font-semibold leading-tight">{title}</h3>
-            <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-sm font-semibold leading-tight truncate">{title}</h3>
+            <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>{subtitle}</p>
           </div>
         </div>
-        {accessory}
+        {accessory && <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">{accessory}</div>}
       </header>
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </motion.section>
