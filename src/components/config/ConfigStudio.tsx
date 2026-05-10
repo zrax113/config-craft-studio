@@ -144,22 +144,48 @@ export function ConfigStudio() {
     };
   }, []);
 
-  // Keyboard shortcuts: Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo
+  // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       const inEditable =
         target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (inEditable) return;
       const mod = e.metaKey || e.ctrlKey;
-      if (!mod || e.key.toLowerCase() !== "z") return;
-      e.preventDefault();
-      if (e.shiftKey) editedHistory.redo();
-      else editedHistory.undo();
+      const k = e.key.toLowerCase();
+
+      // Global (work even when editing): ⌘S export, ⌘⇧C copy output
+      if (mod && k === "s") {
+        e.preventDefault();
+        if (yamlOut) {
+          downloadOut();
+          toast.success("Exported config");
+        }
+        return;
+      }
+      if (mod && e.shiftKey && k === "c") {
+        e.preventDefault();
+        if (yamlOut) {
+          copyOut();
+          toast.success("Copied to clipboard");
+        }
+        return;
+      }
+      if (inEditable) return;
+      if (mod && k === "z") {
+        e.preventDefault();
+        if (e.shiftKey) editedHistory.redo();
+        else editedHistory.undo();
+        return;
+      }
+      if (k === "?" || (e.shiftKey && k === "/")) {
+        e.preventDefault();
+        window.dispatchEvent(new Event("forgeyaml:open-tutorial"));
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editedHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yamlOut, editedHistory]);
 
   function update(path: string[], value: any) {
     editedHistory.set((prev: any) => setDeep(prev, path, value));
