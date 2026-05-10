@@ -566,30 +566,54 @@ function flatKeys(obj: any, depth = 0, max = 3, out = new Set<string>()): Set<st
 export function detectPlugin(
   data: any,
   format: ConfigFormat | null,
-  filename?: string
+  filename?: string,
 ): DetectionResult {
   if (!data || typeof data !== "object") {
     return { id: "unknown", name: "Unknown", category: "unknown", confidence: 0, format, candidates: [] };
   }
+  const topKeys = new Set(Object.keys(data));
   const keys = flatKeys(data);
+  const lowerFile = filename?.toLowerCase();
+
   const scores = SIGNATURES.map((sig) => {
     let score = 0;
     let max = 0;
+    let uniqueHits = 0;
     for (const k of sig.unique ?? []) {
-      max += 3;
-      if (keys.has(k)) score += 3;
+      max += 4;
+      if (keys.has(k)) {
+        score += 4;
+        uniqueHits += 1;
+        // Top-level match is a stronger signal than deep match
+        if (topKeys.has(k)) score += 1;
+      }
     }
     for (const k of sig.any ?? []) {
       max += 1;
       if (keys.has(k)) score += 1;
     }
-    if (filename && sig.filenames?.some((f) => filename.toLowerCase().includes(f))) score += 2;
+    // Filename hint is a very strong signal
+    if (lowerFile && sig.filenames?.some((f) => lowerFile.includes(f.toLowerCase()))) {
+      score += 5;
+      max += 5;
+    }
     if (format && sig.format === format) score += 0.5;
-    return { id: sig.id, name: sig.name, category: sig.category, score: max ? score / max : 0, raw: score };
-  }).sort((a, b) => b.score - a.score);
+    // Penalize matches that hit zero unique markers when uniques exist —
+    // avoids generic plugins (Paper/Spigot "settings") swallowing everything
+    if ((sig.unique?.length ?? 0) > 0 && uniqueHits === 0) score *= 0.35;
+    return {
+      id: sig.id,
+      name: sig.name,
+      category: sig.category,
+      score: max ? score / max : 0,
+      raw: score,
+      uniqueHits,
+    };
+  }).sort((a, b) => b.raw - a.raw);
 
   const top = scores[0];
-  if (!top || top.raw < 2) {
+  // Require either ≥1 unique hit, a filename match, or raw ≥ 3
+  if (!top || (top.uniqueHits === 0 && top.raw < 3)) {
     return {
       id: "unknown",
       name: "Unknown",
