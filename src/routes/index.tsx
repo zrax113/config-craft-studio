@@ -1,17 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ConfigStudio } from "@/components/config/ConfigStudio";
 import { useBrandConfig } from "@/lib/brand-config";
-import { PLUGIN_LIST } from "@/lib/plugin-detect";
-import { Bolt, Github, Keyboard, Search, Menu, PanelLeftClose, PanelLeftOpen, GraduationCap } from "lucide-react";
-import { useState } from "react";
+import { PLUGIN_LIST, type PluginId } from "@/lib/plugin-detect";
+import {
+  Bolt,
+  Github,
+  Keyboard,
+  Search,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  GraduationCap,
+  ChevronRight,
+  FileText,
+  Layers,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { emitLoadPlugin } from "@/lib/plugin-bus";
+import { emitLoadPlugin, emitLoadPack } from "@/lib/plugin-bus";
+import { getSamplesForPlugin, getManifest, type PluginSampleRef } from "@/lib/sample-loader";
 import { Onboarding } from "@/components/config/Onboarding";
 
 export const Route = createFileRoute("/")({
