@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { ScrollToTop } from "./ScrollToTop";
 import { useHistory } from "@/hooks/useHistory";
 import { validateAgainstSchema, analyzeConfig, type SchemaIssue } from "@/lib/schema";
 import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
+import { useSettings, persist, recall, playSound } from "@/lib/settings";
 import {
   Check,
   Copy,
