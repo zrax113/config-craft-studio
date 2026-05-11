@@ -241,7 +241,7 @@ export function validateAgainstSchema(
     }
   }
   for (const [k, t] of Object.entries(schema.types ?? {})) {
-    if (!has(k)) continue;
+    if (!Object.prototype.hasOwnProperty.call(data, k)) continue;
     const v = data[k];
     const actual = Array.isArray(v) ? "array" : v === null ? "object" : typeof v;
     if (actual !== t) {
