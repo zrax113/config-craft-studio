@@ -176,7 +176,7 @@ export function ConfigStudio() {
       setCurrentSampleId(saved.sampleId);
       setFilename(saved.filename);
       setRaw(saved.raw);
-      setRestored(true);
+      restoredRef.current = true;
       toast.success("Restored last session", { description: "Your previous config was loaded from this browser." });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
