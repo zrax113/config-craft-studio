@@ -50,6 +50,7 @@ function setDeep(obj: any, path: string[], value: any): any {
 
 export function ConfigStudio() {
   const cfg = useBrandConfig();
+  const settings = useSettings();
   const [raw, setRaw] = useState("");
   const editedHistory = useHistory<any>(null);
   const edited = editedHistory.value;
@@ -58,6 +59,8 @@ export function ConfigStudio() {
   const [currentSampleId, setCurrentSampleId] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
   const [packIds, setPackIds] = useState<string[] | null>(null);
+  const [mobileTab, setMobileTab] = useState<"input" | "editor" | "output">("input");
+  const [restored, setRestored] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const outputScrollRef = useRef<HTMLPreElement>(null);
