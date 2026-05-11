@@ -242,6 +242,7 @@ export function ConfigStudio() {
     if (!yamlOut) return;
     await navigator.clipboard.writeText(yamlOut);
     setCopied(true);
+    playSound("ok");
     setTimeout(() => setCopied(false), 1500);
   }
 
@@ -257,6 +258,7 @@ export function ConfigStudio() {
     a.download = `${baseName}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
+    playSound("pop");
   }
 
   function onFile(file: File) {
