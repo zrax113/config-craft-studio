@@ -452,6 +452,7 @@ export function ConfigStudio() {
         }
         icon={<Sparkles className="size-4" />}
         delay={0.05}
+        hideOnMobile={mobileTab !== "editor"}
         accessory={
           <div className="flex items-center gap-1.5">
             <Button
