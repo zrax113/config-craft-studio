@@ -60,7 +60,7 @@ export function ConfigStudio() {
   const [copied, setCopied] = useState(false);
   const [packIds, setPackIds] = useState<string[] | null>(null);
   const [mobileTab, setMobileTab] = useState<"input" | "editor" | "output">("input");
-  const [restored, setRestored] = useState(false);
+  const restoredRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const outputScrollRef = useRef<HTMLPreElement>(null);
