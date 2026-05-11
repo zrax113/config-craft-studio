@@ -15,7 +15,9 @@ import {
   ChevronRight,
   FileText,
   Layers,
+  Settings as SettingsIcon,
 } from "lucide-react";
+import { SettingsDialog } from "@/components/config/SettingsDialog";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -298,6 +300,7 @@ function Studio() {
   const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -356,6 +359,16 @@ function Studio() {
             <GraduationCap className="size-3.5" />
             <span className="hidden sm:inline">Tutorial</span>
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setSettingsOpen(true)}
+            title="Settings"
+            aria-label="Open settings"
+          >
+            <SettingsIcon className="size-4" />
+          </Button>
           <a
             href="https://github.com"
             target="_blank"
@@ -392,6 +405,7 @@ function Studio() {
           <Onboarding />
         </main>
       </div>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

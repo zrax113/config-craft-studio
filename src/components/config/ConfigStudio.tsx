@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { ScrollToTop } from "./ScrollToTop";
 import { useHistory } from "@/hooks/useHistory";
 import { validateAgainstSchema, analyzeConfig, type SchemaIssue } from "@/lib/schema";
 import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
+import { useSettings, persist, recall, playSound } from "@/lib/settings";
 import {
   Check,
   Copy,
@@ -48,6 +50,7 @@ function setDeep(obj: any, path: string[], value: any): any {
 
 export function ConfigStudio() {
   const cfg = useBrandConfig();
+  const settings = useSettings();
   const [raw, setRaw] = useState("");
   const editedHistory = useHistory<any>(null);
   const edited = editedHistory.value;
@@ -56,6 +59,8 @@ export function ConfigStudio() {
   const [currentSampleId, setCurrentSampleId] = useState<string | undefined>();
   const [copied, setCopied] = useState(false);
   const [packIds, setPackIds] = useState<string[] | null>(null);
+  const [mobileTab, setMobileTab] = useState<"input" | "editor" | "output">("input");
+  const restoredRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const outputScrollRef = useRef<HTMLPreElement>(null);
@@ -159,6 +164,33 @@ export function ConfigStudio() {
     };
   }, []);
 
+  // Restore last session (if autosave enabled)
+  useEffect(() => {
+    if (!settings.autosave) return;
+    const saved = recall<{ raw: string; format: ConfigFormat; sampleId?: string; filename?: string } | null>(
+      "autosave",
+      null,
+    );
+    if (saved?.raw && !raw) {
+      setFormat(saved.format ?? "yaml");
+      setCurrentSampleId(saved.sampleId);
+      setFilename(saved.filename);
+      setRaw(saved.raw);
+      restoredRef.current = true;
+      toast.success("Restored last session", { description: "Your previous config was loaded from this browser." });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-persist on every change (debounced)
+  useEffect(() => {
+    if (!settings.autosave) return;
+    const t = setTimeout(() => {
+      persist("autosave", { raw, format, sampleId: currentSampleId, filename });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [raw, format, currentSampleId, filename, settings.autosave]);
+
   // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -210,6 +242,7 @@ export function ConfigStudio() {
     if (!yamlOut) return;
     await navigator.clipboard.writeText(yamlOut);
     setCopied(true);
+    playSound("ok");
     setTimeout(() => setCopied(false), 1500);
   }
 
@@ -225,6 +258,7 @@ export function ConfigStudio() {
     a.download = `${baseName}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
+    playSound("pop");
   }
 
   function onFile(file: File) {
@@ -256,13 +290,36 @@ export function ConfigStudio() {
   }
 
   return (
-    <div className="grid gap-5 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] 2xl:gap-6 h-full min-h-0">
-      {/* Input panel */}
+    <div className="h-full min-h-0 flex flex-col">
+      {/* Mobile tab switcher — splits Input / Editor / Output into tabs on small screens */}
+      <div className="lg:hidden flex items-center gap-1 mb-3 p-1 rounded-lg bg-muted/30 border border-border/50 shrink-0">
+        {(["input", "editor", "output"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => {
+              setMobileTab(t);
+              playSound("click");
+            }}
+            className={`flex-1 text-[11px] uppercase tracking-wider font-semibold py-1.5 rounded-md transition-colors ${
+              mobileTab === t
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            aria-pressed={mobileTab === t}
+          >
+            {t === "input" ? "Input" : t === "editor" ? "Editor" : "Output"}
+          </button>
+        ))}
+      </div>
+
+      <div className={`grid gap-5 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] 2xl:gap-6 flex-1 min-h-0`} data-mobile-tab={mobileTab}>
+        {/* Hide non-active panels on mobile via attribute selector below */}
       <Panel
         title="Input"
         subtitle={filename ?? "Paste, drop, or load a sample"}
         icon={<Wand2 className="size-4" />}
         delay={0}
+        hideOnMobile={mobileTab !== "input"}
       >
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           <Button
@@ -395,6 +452,7 @@ export function ConfigStudio() {
         }
         icon={<Sparkles className="size-4" />}
         delay={0.05}
+        hideOnMobile={mobileTab !== "editor"}
         accessory={
           <div className="flex items-center gap-1.5">
             <Button
@@ -508,6 +566,7 @@ export function ConfigStudio() {
         subtitle={`${format.toUpperCase()} · ready to ship`}
         icon={<Download className="size-4" />}
         delay={0.1}
+        hideOnMobile={mobileTab !== "output"}
         accessory={
           <div className="flex gap-1 flex-wrap justify-end">
             <Button
@@ -583,6 +642,7 @@ export function ConfigStudio() {
         )}
         <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
+      </div>
     </div>
   );
 }
@@ -594,6 +654,7 @@ function Panel({
   accessory,
   children,
   delay = 0,
+  hideOnMobile = false,
 }: {
   title: string;
   subtitle?: string;
@@ -601,8 +662,12 @@ function Panel({
   accessory?: React.ReactNode;
   children: React.ReactNode;
   delay?: number;
+  hideOnMobile?: boolean;
 }) {
   const [maximized, setMaximized] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   // Esc to exit fullscreen
   useEffect(() => {
@@ -611,20 +676,26 @@ function Panel({
       if (e.key === "Escape") setMaximized(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Lock body scroll
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
   }, [maximized]);
 
-  return (
+  const sectionBody = (
     <motion.section
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ borderColor: "transparent" }}
+      initial={maximized ? { opacity: 0, scale: 0.96 } : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ delay: maximized ? 0 : delay, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={
         maximized
-          ? "glass glass-shine rounded-2xl p-4 flex flex-col fixed inset-2 sm:inset-4 z-50 min-w-0 shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.4),0_40px_120px_-20px_oklch(0_0_0_/_0.8)] animate-scale-in"
-          : "glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
+          ? "glass glass-shine rounded-2xl p-4 flex flex-col fixed inset-2 sm:inset-4 z-[60] min-w-0 shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.4),0_40px_120px_-20px_oklch(0_0_0_/_0.8)]"
+          : `glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)] ${
+              hideOnMobile ? "hidden lg:flex" : ""
+            }`
       }
     >
       <header className="flex items-center justify-between gap-2 flex-wrap pb-3 mb-3 border-b border-border/40">
@@ -654,6 +725,23 @@ function Panel({
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </motion.section>
   );
+
+  if (maximized && mounted) {
+    return createPortal(
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-background/80 backdrop-blur-md z-[55]"
+          onClick={() => setMaximized(false)}
+        />
+        {sectionBody}
+      </>,
+      document.body,
+    );
+  }
+  return sectionBody;
 }
 
 function EmptyState() {

@@ -111,6 +111,16 @@
 }
 
 @layer utilities {
+  /* Disable all motion when the user turns animations off in settings. */
+  html.no-anim *,
+  html.no-anim *::before,
+  html.no-anim *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0 !important;
+  }
+
   .glass {
     background: oklch(0.20 0.012 275 / 0.55);
     backdrop-filter: blur(20px) saturate(140%);

@@ -2,6 +2,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { MiniMessageToolbar, hasFormatting } from "./MiniMessageToolbar";
 
 interface Props {
   path: string[];
@@ -71,11 +72,20 @@ export function FieldEditor({ path, value, onChange, depth = 0 }: Props) {
   // String
   if (typeof value === "string") {
     const isLong = value.length > 60 || value.includes("\n");
+    const showToolbar =
+      hasFormatting(value) ||
+      /(message|format|prefix|suffix|motd|title|name|description|broadcast|chat|text)/i.test(key);
     return (
       <div className="space-y-1.5 py-2 px-3 min-w-0">
-        <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider break-words" title={key}>
-          {label}
-        </Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label
+            className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider break-words min-w-0 flex-1"
+            title={key}
+          >
+            {label}
+          </Label>
+          {showToolbar && <MiniMessageToolbar value={value} onChange={(v) => onChange(path, v)} />}
+        </div>
         {isLong ? (
           <Textarea
             value={value}

@@ -160,6 +160,44 @@ export function resolveSchema(opts: { sampleId?: string; pluginId?: string }): P
   return null;
 }
 
+/**
+ * A "messages/locale" file is a flat map of keys to plain strings (no nesting).
+ * EssentialsX messages_en.yml, LuckPerms lang/en.yml, etc. all look like this.
+ * They have no meaningful "required keys" — every entry is optional locale text.
+ */
+function looksLikeMessagesFile(data: any): boolean {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  const entries = Object.entries(data);
+  if (entries.length === 0) return false;
+  // If every leaf is a string (or null) and nothing nests, treat as messages.
+  const allFlatStrings = entries.every(([, v]) => v == null || typeof v === "string" || typeof v === "number");
+  return allFlatStrings && entries.length > 4;
+}
+
+/** Fuzzy presence check — accepts dot-paths and nested keys. */
+function hasFuzzy(data: any, key: string): boolean {
+  if (!data || typeof data !== "object") return false;
+  if (Object.prototype.hasOwnProperty.call(data, key)) return true;
+  // dot-path support: "chat.format"
+  if (key.includes(".")) {
+    const parts = key.split(".");
+    let cur: any = data;
+    for (const p of parts) {
+      if (!cur || typeof cur !== "object" || !(p in cur)) return false;
+      cur = cur[p];
+    }
+    return true;
+  }
+  // Nested anywhere (one level deep) — handles plugins that wrap config under
+  // a root namespace key like `luckperms:` or `essentials:`.
+  for (const v of Object.values(data)) {
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      if (Object.prototype.hasOwnProperty.call(v, key)) return true;
+    }
+  }
+  return false;
+}
+
 export function validateAgainstSchema(
   pluginIdOrOpts: PluginId | { sampleId?: string; pluginId?: string },
   data: any,
@@ -170,31 +208,40 @@ export function validateAgainstSchema(
       : pluginIdOrOpts;
   const schema = resolveSchema(opts);
   if (!schema || !data || typeof data !== "object") return [];
-  const issues: SchemaIssue[] = [];
-  const has = (k: string) => Object.prototype.hasOwnProperty.call(data, k);
 
-  for (const k of schema.required ?? []) {
-    if (!has(k)) {
-      issues.push({
-        level: "error",
-        key: k,
-        message: `Missing required key "${k}"`,
-        hint: schema.hints?.[k],
-      });
+  // Multi-strategy heuristic: if the file is clearly a messages/locale file
+  // OR the sample id ends with _messages, suppress required/recommended noise.
+  // We still type-check explicit keys and run regex patterns.
+  const isMessages =
+    /_messages$/i.test(opts.sampleId ?? "") || looksLikeMessagesFile(data);
+
+  const issues: SchemaIssue[] = [];
+  const has = (k: string) => hasFuzzy(data, k);
+
+  if (!isMessages) {
+    for (const k of schema.required ?? []) {
+      if (!has(k)) {
+        issues.push({
+          level: "error",
+          key: k,
+          message: `Missing required key "${k}"`,
+          hint: schema.hints?.[k],
+        });
+      }
     }
-  }
-  for (const k of schema.recommended ?? []) {
-    if (!has(k)) {
-      issues.push({
-        level: "warn",
-        key: k,
-        message: `Missing recommended key "${k}"`,
-        hint: schema.hints?.[k],
-      });
+    for (const k of schema.recommended ?? []) {
+      if (!has(k)) {
+        issues.push({
+          level: "warn",
+          key: k,
+          message: `Missing recommended key "${k}"`,
+          hint: schema.hints?.[k],
+        });
+      }
     }
   }
   for (const [k, t] of Object.entries(schema.types ?? {})) {
-    if (!has(k)) continue;
+    if (!Object.prototype.hasOwnProperty.call(data, k)) continue;
     const v = data[k];
     const actual = Array.isArray(v) ? "array" : v === null ? "object" : typeof v;
     if (actual !== t) {
