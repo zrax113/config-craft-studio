@@ -319,6 +319,7 @@ export function ConfigStudio() {
         subtitle={filename ?? "Paste, drop, or load a sample"}
         icon={<Wand2 className="size-4" />}
         delay={0}
+        hideOnMobile={mobileTab !== "input"}
       >
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           <Button
