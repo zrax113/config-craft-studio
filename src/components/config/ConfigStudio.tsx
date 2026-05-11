@@ -566,6 +566,7 @@ export function ConfigStudio() {
         subtitle={`${format.toUpperCase()} · ready to ship`}
         icon={<Download className="size-4" />}
         delay={0.1}
+        hideOnMobile={mobileTab !== "output"}
         accessory={
           <div className="flex gap-1 flex-wrap justify-end">
             <Button
