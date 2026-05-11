@@ -2,6 +2,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { MiniMessageToolbar, hasFormatting } from "./MiniMessageToolbar";
 
 interface Props {
   path: string[];
