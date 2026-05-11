@@ -164,6 +164,33 @@ export function ConfigStudio() {
     };
   }, []);
 
+  // Restore last session (if autosave enabled)
+  useEffect(() => {
+    if (!settings.autosave) return;
+    const saved = recall<{ raw: string; format: ConfigFormat; sampleId?: string; filename?: string } | null>(
+      "autosave",
+      null,
+    );
+    if (saved?.raw && !raw) {
+      setFormat(saved.format ?? "yaml");
+      setCurrentSampleId(saved.sampleId);
+      setFilename(saved.filename);
+      setRaw(saved.raw);
+      setRestored(true);
+      toast.success("Restored last session", { description: "Your previous config was loaded from this browser." });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-persist on every change (debounced)
+  useEffect(() => {
+    if (!settings.autosave) return;
+    const t = setTimeout(() => {
+      persist("autosave", { raw, format, sampleId: currentSampleId, filename });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [raw, format, currentSampleId, filename, settings.autosave]);
+
   // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
