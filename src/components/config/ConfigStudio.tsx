@@ -723,6 +723,23 @@ function Panel({
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </motion.section>
   );
+
+  if (maximized && mounted) {
+    return createPortal(
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-background/80 backdrop-blur-md z-[55]"
+          onClick={() => setMaximized(false)}
+        />
+        {sectionBody}
+      </>,
+      document.body,
+    );
+  }
+  return sectionBody;
 }
 
 function EmptyState() {
