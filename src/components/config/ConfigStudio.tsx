@@ -652,6 +652,7 @@ function Panel({
   accessory,
   children,
   delay = 0,
+  hideOnMobile = false,
 }: {
   title: string;
   subtitle?: string;
@@ -659,8 +660,12 @@ function Panel({
   accessory?: React.ReactNode;
   children: React.ReactNode;
   delay?: number;
+  hideOnMobile?: boolean;
 }) {
   const [maximized, setMaximized] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   // Esc to exit fullscreen
   useEffect(() => {
@@ -669,20 +674,26 @@ function Panel({
       if (e.key === "Escape") setMaximized(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Lock body scroll
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
   }, [maximized]);
 
-  return (
+  const sectionBody = (
     <motion.section
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ borderColor: "transparent" }}
+      initial={maximized ? { opacity: 0, scale: 0.96 } : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ delay: maximized ? 0 : delay, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={
         maximized
-          ? "glass glass-shine rounded-2xl p-4 flex flex-col fixed inset-2 sm:inset-4 z-50 min-w-0 shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.4),0_40px_120px_-20px_oklch(0_0_0_/_0.8)] animate-scale-in"
-          : "glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)]"
+          ? "glass glass-shine rounded-2xl p-4 flex flex-col fixed inset-2 sm:inset-4 z-[60] min-w-0 shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.4),0_40px_120px_-20px_oklch(0_0_0_/_0.8)]"
+          : `glass glass-shine rounded-2xl p-4 flex flex-col min-h-[60vh] lg:h-full lg:min-h-0 relative min-w-0 transition-shadow hover:shadow-[0_0_0_1px_oklch(0.76_0.16_290_/_0.25),0_24px_60px_-30px_oklch(0_0_0_/_0.6)] ${
+              hideOnMobile ? "hidden lg:flex" : ""
+            }`
       }
     >
       <header className="flex items-center justify-between gap-2 flex-wrap pb-3 mb-3 border-b border-border/40">
