@@ -405,6 +405,7 @@ function Studio() {
           <Onboarding />
         </main>
       </div>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
