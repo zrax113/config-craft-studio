@@ -218,24 +218,26 @@ export function validateAgainstSchema(
   const issues: SchemaIssue[] = [];
   const has = (k: string) => hasFuzzy(data, k);
 
-  for (const k of schema.required ?? []) {
-    if (!has(k)) {
-      issues.push({
-        level: "error",
-        key: k,
-        message: `Missing required key "${k}"`,
-        hint: schema.hints?.[k],
-      });
+  if (!isMessages) {
+    for (const k of schema.required ?? []) {
+      if (!has(k)) {
+        issues.push({
+          level: "error",
+          key: k,
+          message: `Missing required key "${k}"`,
+          hint: schema.hints?.[k],
+        });
+      }
     }
-  }
-  for (const k of schema.recommended ?? []) {
-    if (!has(k)) {
-      issues.push({
-        level: "warn",
-        key: k,
-        message: `Missing recommended key "${k}"`,
-        hint: schema.hints?.[k],
-      });
+    for (const k of schema.recommended ?? []) {
+      if (!has(k)) {
+        issues.push({
+          level: "warn",
+          key: k,
+          message: `Missing recommended key "${k}"`,
+          hint: schema.hints?.[k],
+        });
+      }
     }
   }
   for (const [k, t] of Object.entries(schema.types ?? {})) {
