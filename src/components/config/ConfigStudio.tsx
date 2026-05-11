@@ -639,6 +639,7 @@ export function ConfigStudio() {
         )}
         <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
+      </div>
     </div>
   );
 }
