@@ -15,7 +15,9 @@ import {
   ChevronRight,
   FileText,
   Layers,
+  Settings as SettingsIcon,
 } from "lucide-react";
+import { SettingsDialog } from "@/components/config/SettingsDialog";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
