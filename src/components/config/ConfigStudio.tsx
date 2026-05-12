@@ -70,6 +70,8 @@ export function ConfigStudio() {
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const outputScrollRef = useRef<HTMLPreElement>(null);
+  // Distinguishes "raw → edited" sync from "edited → raw" sync to avoid loops.
+  const lastDumpedRef = useRef<string>("");
 
   const parsed = useMemo(() => parseConfig(raw), [raw]);
   const detection: DetectionResult | null = useMemo(() => {
@@ -96,6 +98,23 @@ export function ConfigStudio() {
       return "";
     }
   }, [edited, format]);
+
+  // Two-way sync: when the user edits via the visual FieldEditor, regenerate
+  // the raw text so the input panel stays in sync. Guard against loops by
+  // comparing against the last text WE produced.
+  useEffect(() => {
+    if (!edited || !yamlOut) return;
+    if (yamlOut === raw) return;
+    if (yamlOut === lastDumpedRef.current) return;
+    // Only push back if current raw parses to something equivalent to a previous
+    // dump (i.e. user is editing the parsed object, not the raw text directly).
+    // Safe heuristic: if parsed succeeded AND raw differs from yamlOut, sync.
+    if (parsed.ok) {
+      lastDumpedRef.current = yamlOut;
+      setRaw(yamlOut);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yamlOut]);
 
   const schemaIssues: SchemaIssue[] = useMemo(() => {
     if (!edited) return [];
