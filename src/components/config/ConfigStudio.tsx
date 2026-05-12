@@ -16,6 +16,7 @@ import { useHistory } from "@/hooks/useHistory";
 import { validateAgainstSchema, analyzeConfig, type SchemaIssue } from "@/lib/schema";
 import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
 import { useSettings, persist, recall, playSound } from "@/lib/settings";
+import { autoFixYaml } from "@/lib/auto-fix";
 import {
   Check,
   Copy,
@@ -33,6 +34,7 @@ import {
   ClipboardPaste,
   Files,
   HelpCircle,
+  Wrench,
   Maximize2,
   Minimize2,
   Server,
