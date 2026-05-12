@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { parseConfig, dumpConfig, type ConfigFormat } from "@/lib/config-parser";
-import { detectPlugin, type DetectionResult, type PluginId, PLUGIN_LIST } from "@/lib/plugin-detect";
+import {
+  detectPlugin,
+  type DetectionResult,
+  type PluginId,
+  PLUGIN_LIST,
+} from "@/lib/plugin-detect";
 import { SAMPLE_LIST } from "@/lib/sample-configs";
 import { loadSample } from "@/lib/sample-loader";
 import { onLoadPlugin, onLoadPack } from "@/lib/plugin-bus";
@@ -16,6 +22,7 @@ import { useHistory } from "@/hooks/useHistory";
 import { validateAgainstSchema, analyzeConfig, type SchemaIssue } from "@/lib/schema";
 import { PLUGIN_PACKS, packForPlugin } from "@/lib/plugin-packs";
 import { useSettings, persist, recall, playSound } from "@/lib/settings";
+import { sftpUpload } from "@/lib/sftp.functions";
 import { autoFixYaml } from "@/lib/auto-fix";
 import {
   Check,
@@ -38,9 +45,11 @@ import {
   Maximize2,
   Minimize2,
   Server,
+  Loader2,
+  Save,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
-import { SftpDialog, type SftpFile } from "./SftpDialog";
+import { SftpDialog, type SftpFile, type SftpSession, type SftpImportResult } from "./SftpDialog";
 
 function setDeep(obj: any, path: string[], value: any): any {
   if (path.length === 0) return value;
@@ -67,6 +76,9 @@ export function ConfigStudio() {
   const [mobileTabFullscreen, setMobileTabFullscreen] = useState(false);
   const [sftpOpen, setSftpOpen] = useState(false);
   const [sftpFiles, setSftpFiles] = useState<SftpFile[]>([]);
+  const [sftpSession, setSftpSession] = useState<SftpSession | null>(null);
+  const [savingSftp, setSavingSftp] = useState(false);
+  const sftpUploadFn = useServerFn(sftpUpload);
   const restoredRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
@@ -120,7 +132,10 @@ export function ConfigStudio() {
   const schemaIssues: SchemaIssue[] = useMemo(() => {
     if (!edited) return [];
     return validateAgainstSchema(
-      { sampleId: currentSampleId, pluginId: detection && detection.id !== "unknown" ? detection.id : undefined },
+      {
+        sampleId: currentSampleId,
+        pluginId: detection && detection.id !== "unknown" ? detection.id : undefined,
+      },
       edited,
     );
   }, [detection, edited, currentSampleId]);
@@ -193,17 +208,21 @@ export function ConfigStudio() {
   // Restore last session (if autosave enabled)
   useEffect(() => {
     if (!settings.autosave) return;
-    const saved = recall<{ raw: string; format: ConfigFormat; sampleId?: string; filename?: string } | null>(
-      "autosave",
-      null,
-    );
+    const saved = recall<{
+      raw: string;
+      format: ConfigFormat;
+      sampleId?: string;
+      filename?: string;
+    } | null>("autosave", null);
     if (saved?.raw && !raw) {
       setFormat(saved.format ?? "yaml");
       setCurrentSampleId(saved.sampleId);
       setFilename(saved.filename);
       setRaw(saved.raw);
       restoredRef.current = true;
-      toast.success("Restored last session", { description: "Your previous config was loaded from this browser." });
+      toast.success("Restored last session", {
+        description: "Your previous config was loaded from this browser.",
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -222,7 +241,8 @@ export function ConfigStudio() {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       const inEditable =
-        target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
       const mod = e.metaKey || e.ctrlKey;
       const k = e.key.toLowerCase();
 
@@ -275,7 +295,9 @@ export function ConfigStudio() {
   function currentFilename() {
     const ext = format === "toml" ? "toml" : format === "json" ? "json" : "yml";
     const baseName =
-      detection && detection.id !== "unknown" ? detection.id : filename?.replace(/\.[^.]+$/, "") || "config";
+      detection && detection.id !== "unknown"
+        ? detection.id
+        : filename?.replace(/\.[^.]+$/, "") || "config";
     return `${baseName}.${ext}`;
   }
 
@@ -300,11 +322,66 @@ export function ConfigStudio() {
     setSftpOpen(true);
   }
 
+  function openSftpImport() {
+    setSftpFiles([]);
+    setSftpOpen(true);
+  }
+
+  function handleSftpImport(result: SftpImportResult) {
+    setRaw(result.contents);
+    setFilename(result.filename);
+    setSftpSession(result.session);
+    toast.success(`Imported ${result.filename} from SFTP`);
+  }
+
+  async function saveToSftp() {
+    if (!sftpSession) return;
+    if (!raw && !yamlOut) {
+      toast.error("Nothing to upload");
+      return;
+    }
+
+    setSavingSftp(true);
+    try {
+      const remotePath = sftpSession.remotePath;
+      const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/")) || "/";
+      const remoteName = remotePath.split("/").filter(Boolean).pop() || currentFilename();
+      const contents = raw.trim() ? raw : yamlOut;
+      const res = await sftpUploadFn({
+        data: {
+          host: sftpSession.host,
+          port: sftpSession.port,
+          username: sftpSession.username,
+          remoteDir,
+          ...(sftpSession.authType === "password"
+            ? { password: sftpSession.password }
+            : {
+                privateKey: sftpSession.privateKey,
+                ...(sftpSession.passphrase ? { passphrase: sftpSession.passphrase } : {}),
+              }),
+          files: [{ path: remoteName, contents }],
+        },
+      });
+
+      if (res.ok) {
+        toast.success(`Saved ${remoteName} to ${remoteDir} via SFTP`);
+      } else {
+        toast.error("Save to SFTP failed", { description: res.error });
+      }
+    } catch (e: any) {
+      toast.error("Save to SFTP failed", { description: e?.message ?? String(e) });
+    } finally {
+      setSavingSftp(false);
+    }
+  }
+
   function downloadOut() {
     if (!yamlOut) return;
     const ext = format === "toml" ? "toml" : format === "json" ? "json" : "yml";
     const baseName =
-      detection && detection.id !== "unknown" ? detection.id : filename?.replace(/\.[^.]+$/, "") || "config";
+      detection && detection.id !== "unknown"
+        ? detection.id
+        : filename?.replace(/\.[^.]+$/, "") || "config";
     const blob = new Blob([yamlOut], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -379,373 +456,426 @@ export function ConfigStudio() {
         </button>
       </div>
 
-      <div className={`grid gap-5 grid-cols-1 ${mobileTabFullscreen ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)]"} 2xl:gap-6 flex-1 min-h-0`} data-mobile-tab={mobileTab}>
-        {/* Hide non-active panels on mobile via attribute selector below */}
-      <Panel
-        title="Input"
-        subtitle={filename ?? "Paste, drop, or load a sample"}
-        icon={<Wand2 className="size-4" />}
-        delay={0}
-        hideOnMobile={mobileTab !== "input"}
+      <div
+        className={`grid gap-5 grid-cols-1 ${mobileTabFullscreen ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)]"} 2xl:gap-6 flex-1 min-h-0`}
+        data-mobile-tab={mobileTab}
       >
-        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 text-xs"
-            onClick={pasteFromClipboard}
-            title="Paste from clipboard"
-          >
-            <ClipboardPaste className="size-3.5 mr-1.5" /> Paste
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 text-xs"
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload className="size-3.5 mr-1.5" /> Upload
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".yml,.yaml,.toml,.json,.txt,.config"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onFile(f);
-              e.target.value = "";
-            }}
-          />
-          {raw && (
-            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={reset}>
-              <RotateCcw className="size-3.5 mr-1.5" /> Clear
+        {/* Hide non-active panels on mobile via attribute selector below */}
+        <Panel
+          title="Input"
+          subtitle={filename ?? "Paste, drop, or load a sample"}
+          icon={<Wand2 className="size-4" />}
+          delay={0}
+          hideOnMobile={mobileTab !== "input"}
+        >
+          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs"
+              onClick={pasteFromClipboard}
+              title="Paste from clipboard"
+            >
+              <ClipboardPaste className="size-3.5 mr-1.5" /> Paste
             </Button>
-          )}
-          <div className="ml-auto flex items-center gap-1 rounded-md bg-muted/40 p-0.5 border border-border/50">
-            {(["yaml", "toml", "json"] as ConfigFormat[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFormat(f)}
-                className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded transition-colors ${
-                  format === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <PackFilePicker
-          detectionId={detection?.id}
-          currentSampleId={currentSampleId}
-          extraSampleIds={packIds ?? undefined}
-          onPick={async (sampleId) => {
-            const sample = await loadSample(sampleId);
-            if (sample) {
-              applySample(sample.content, sample.format, sampleId);
-              toast.success(`Loaded ${sample.label}`);
-            }
-          }}
-        />
-
-        <CodeEditor
-          value={raw}
-          onChange={setRaw}
-          format={parsed.format}
-          errorLine={parsed.error?.line}
-          placeholder="# paste any plugin config here…"
-        />
-
-        <AnimatePresence>
-          {parsed.error && raw.trim() && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-3 flex items-start gap-2 text-xs bg-destructive/10 border border-destructive/30 px-3 py-2 rounded-md text-destructive"
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs"
+              onClick={() => fileRef.current?.click()}
             >
-              <FileWarning className="size-3.5 mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold">
-                  {parsed.error.line ? `Line ${parsed.error.line} · ` : ""}Parse error
-                </div>
-                <div className="text-destructive/80 mt-0.5 font-mono break-words">{parsed.error.message}</div>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-[11px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10 shrink-0"
-                onClick={() => {
-                  const res = autoFixYaml(raw);
-                  if (res.applied.length === 0) {
-                    toast.info("Nothing obvious to fix");
-                    return;
-                  }
-                  setRaw(res.fixed);
-                  if (res.ok) {
-                    toast.success("Auto-fixed", { description: res.applied.join(" · ") });
-                    playSound("ok");
-                  } else {
-                    toast.warning("Applied fixes — still has errors", {
-                      description: res.applied.join(" · "),
-                    });
-                  }
-                }}
-                title="Try to auto-fix common YAML issues (tabs, smart quotes, missing colon space…)"
-              >
-                <Wrench className="size-3" /> Auto-fix
+              <Upload className="size-3.5 mr-1.5" /> Upload
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".yml,.yaml,.toml,.json,.txt,.config"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onFile(f);
+                e.target.value = "";
+              }}
+            />
+            {raw && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={reset}>
+                <RotateCcw className="size-3.5 mr-1.5" /> Clear
               </Button>
-            </motion.div>
-          )}
-          {parsed.ok && raw.trim() && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-3 flex items-center gap-1.5 text-xs text-success"
-            >
-              <CheckCircle2 className="size-3.5" /> Valid {parsed.format?.toUpperCase()}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {cfg.studio.showSamples && (
-          <div className="mt-3 pt-3 border-t border-border/40">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-semibold">
-              Try a sample
-            </div>
-            <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 whitespace-nowrap">
-              {SAMPLE_LIST.map(([id, s]) => (
+            )}
+            <div className="ml-auto flex items-center gap-1 rounded-md bg-muted/40 p-0.5 border border-border/50">
+              {(["yaml", "toml", "json"] as ConfigFormat[]).map((f) => (
                 <button
-                  key={id}
-                  onClick={() => applySample(s.content, s.format)}
-                  className="text-[11px] px-2 py-1 rounded-md bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all border border-border/50 hover:border-primary/30 shrink-0"
+                  key={f}
+                  onClick={() => setFormat(f)}
+                  className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded transition-colors ${
+                    format === f
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  {s.label}
+                  {f}
                 </button>
               ))}
             </div>
           </div>
-        )}
-      </Panel>
 
-      {/* Editor panel */}
-      <Panel
-        title="Visual editor"
-        subtitle={
-          detection && detection.id !== "unknown"
-            ? `${detection.name} · ${Math.round(detection.confidence * 100)}% match`
-            : edited
-            ? "Generic config"
-            : "Awaiting input"
-        }
-        icon={<Sparkles className="size-4" />}
-        delay={0.05}
-        hideOnMobile={mobileTab !== "editor"}
-        accessory={
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2"
-              onClick={editedHistory.undo}
-              disabled={!editedHistory.canUndo}
-              title="Undo (⌘Z)"
-            >
-              <Undo2 className="size-3.5" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2"
-              onClick={editedHistory.redo}
-              disabled={!editedHistory.canRedo}
-              title="Redo (⌘⇧Z)"
-            >
-              <Redo2 className="size-3.5" />
-            </Button>
-            {stats && (
-              <Badge
-                variant="outline"
-                className="text-[10px] font-mono border-border/50 text-muted-foreground hidden md:inline-flex"
-                title={`${stats.keys} keys · depth ${stats.depth} · ${stats.leaves} leaves`}
+          <PackFilePicker
+            detectionId={detection?.id}
+            currentSampleId={currentSampleId}
+            extraSampleIds={packIds ?? undefined}
+            onPick={async (sampleId) => {
+              const sample = await loadSample(sampleId);
+              if (sample) {
+                applySample(sample.content, sample.format, sampleId);
+                toast.success(`Loaded ${sample.label}`);
+              }
+            }}
+          />
+
+          <CodeEditor
+            value={raw}
+            onChange={setRaw}
+            format={parsed.format}
+            errorLine={parsed.error?.line}
+            placeholder="# paste any plugin config here…"
+          />
+
+          <AnimatePresence>
+            {parsed.error && raw.trim() && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 flex items-start gap-2 text-xs bg-destructive/10 border border-destructive/30 px-3 py-2 rounded-md text-destructive"
               >
-                {stats.keys}k · d{stats.depth}
-              </Badge>
-            )}
-            {cfg.studio.showPluginBadge && detection && detection.id !== "unknown" && (
-              <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={detection.id}>
-                <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
-                  {detection.category}
-                </Badge>
+                <FileWarning className="size-3.5 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold">
+                    {parsed.error.line ? `Line ${parsed.error.line} · ` : ""}Parse error
+                  </div>
+                  <div className="text-destructive/80 mt-0.5 font-mono break-words">
+                    {parsed.error.message}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-[11px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10 shrink-0"
+                  onClick={() => {
+                    const res = autoFixYaml(raw);
+                    if (res.applied.length === 0) {
+                      toast.info("Nothing obvious to fix");
+                      return;
+                    }
+                    setRaw(res.fixed);
+                    if (res.ok) {
+                      toast.success("Auto-fixed", { description: res.applied.join(" · ") });
+                      playSound("ok");
+                    } else {
+                      toast.warning("Applied fixes — still has errors", {
+                        description: res.applied.join(" · "),
+                      });
+                    }
+                  }}
+                  title="Try to auto-fix common YAML issues (tabs, smart quotes, missing colon space…)"
+                >
+                  <Wrench className="size-3" /> Auto-fix
+                </Button>
               </motion.div>
             )}
-          </div>
-        }
-      >
-        <div ref={editorScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden pr-1 -mr-1 min-h-0 min-w-0">
-          {!edited ? (
-            <EmptyState />
-          ) : (
-            <motion.div
-              key={detection?.id ?? "k"}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-1 min-w-0"
-            >
-              {detection && detection.id === "unknown" && (
-                <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
-                  <div className="flex items-center gap-1.5 font-semibold text-foreground/80 uppercase tracking-wider mb-1">
-                    <HelpCircle className="size-3.5" /> Unrecognized config
-                  </div>
-                  <p className="leading-relaxed">
-                    We couldn't match a known plugin — editing as a generic config. Closest guesses:{" "}
-                    {detection.candidates.slice(0, 3).map((c, i) => (
-                      <span key={c.id}>
-                        {i > 0 && ", "}
-                        <button
-                          className="underline decoration-dotted hover:text-primary"
-                          onClick={async () => {
-                            const s = await loadSample(c.id);
-                            if (s) applySample(s.content, s.format, c.id);
-                          }}
-                        >
-                          {c.name}
-                        </button>
-                      </span>
-                    ))}
-                  </p>
-                </div>
-              )}
-              {schemaIssues.length > 0 && (
-                <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 p-2.5 space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warning uppercase tracking-wider">
-                    <AlertTriangle className="size-3.5" />
-                    Schema check · {schemaIssues.length} issue{schemaIssues.length === 1 ? "" : "s"}
-                  </div>
-                  <ul className="text-[11px] space-y-0.5 text-muted-foreground">
-                    {schemaIssues.slice(0, 6).map((iss, i) => (
-                      <li key={i} className="flex gap-1.5">
-                        <span
-                          className={
-                            iss.level === "error" ? "text-destructive font-semibold" : "text-warning font-semibold"
-                          }
-                        >
-                          {iss.level === "error" ? "ERR" : "WARN"}
-                        </span>
-                        <span className="break-words">{iss.message}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {Object.entries(edited).map(([k, v]) => (
-                <FieldEditor key={k} path={[k]} value={v} onChange={update} />
-              ))}
-            </motion.div>
-          )}
-        </div>
-        <ScrollToTop targetRef={editorScrollRef} />
-      </Panel>
+            {parsed.ok && raw.trim() && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mt-3 flex items-center gap-1.5 text-xs text-success"
+              >
+                <CheckCircle2 className="size-3.5" /> Valid {parsed.format?.toUpperCase()}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      {/* Output panel */}
-      <Panel
-        title="Output"
-        subtitle={`${format.toUpperCase()} · ready to ship`}
-        icon={<Download className="size-4" />}
-        delay={0.1}
-        hideOnMobile={mobileTab !== "output"}
-        accessory={
-          <div className="flex gap-1 flex-wrap justify-end">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={copyOut}
-              disabled={!yamlOut}
-              className="h-8 px-2"
-              title="Copy (⌘⇧C)"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {copied ? (
-                  <motion.span
-                    key="ok"
-                    initial={{ scale: 0.6, opacity: 0, rotate: -20 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    exit={{ scale: 0.6, opacity: 0 }}
+          {cfg.studio.showSamples && (
+            <div className="mt-3 pt-3 border-t border-border/40">
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-semibold">
+                Try a sample
+              </div>
+              <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 whitespace-nowrap">
+                {SAMPLE_LIST.map(([id, s]) => (
+                  <button
+                    key={id}
+                    onClick={() => applySample(s.content, s.format)}
+                    className="text-[11px] px-2 py-1 rounded-md bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all border border-border/50 hover:border-primary/30 shrink-0"
                   >
-                    <Check className="size-4 text-success" />
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="copy"
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.6, opacity: 0 }}
-                  >
-                    <Copy className="size-4" />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Button>
-            {detection && packForPlugin(detection.id) && (
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </Panel>
+
+        {/* Editor panel */}
+        <Panel
+          title="Visual editor"
+          subtitle={
+            detection && detection.id !== "unknown"
+              ? `${detection.name} · ${Math.round(detection.confidence * 100)}% match`
+              : edited
+                ? "Generic config"
+                : "Awaiting input"
+          }
+          icon={<Sparkles className="size-4" />}
+          delay={0.05}
+          hideOnMobile={mobileTab !== "editor"}
+          accessory={
+            <div className="flex items-center gap-1.5">
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={exportPack}
-                className="h-8 px-2 text-xs"
-                title="Export every related file (config, messages, kits…)"
+                className="h-8 px-2"
+                onClick={editedHistory.undo}
+                disabled={!editedHistory.canUndo}
+                title="Undo (⌘Z)"
               >
-                <Package className="size-3.5 sm:mr-1.5" />
-                <span className="hidden sm:inline">Pack</span>
+                <Undo2 className="size-3.5" />
               </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-2"
+                onClick={editedHistory.redo}
+                disabled={!editedHistory.canRedo}
+                title="Redo (⌘⇧Z)"
+              >
+                <Redo2 className="size-3.5" />
+              </Button>
+              {stats && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-mono border-border/50 text-muted-foreground hidden md:inline-flex"
+                  title={`${stats.keys} keys · depth ${stats.depth} · ${stats.leaves} leaves`}
+                >
+                  {stats.keys}k · d{stats.depth}
+                </Badge>
+              )}
+              {cfg.studio.showPluginBadge && detection && detection.id !== "unknown" && (
+                <motion.div
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  key={detection.id}
+                >
+                  <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 capitalize">
+                    {detection.category}
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
+          }
+        >
+          <div
+            ref={editorScrollRef}
+            className="flex-1 overflow-y-auto overflow-x-hidden pr-1 -mr-1 min-h-0 min-w-0"
+          >
+            {!edited ? (
+              <EmptyState />
+            ) : (
+              <motion.div
+                key={detection?.id ?? "k"}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-1 min-w-0"
+              >
+                {detection && detection.id === "unknown" && (
+                  <div className="mb-3 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 font-semibold text-foreground/80 uppercase tracking-wider mb-1">
+                      <HelpCircle className="size-3.5" /> Unrecognized config
+                    </div>
+                    <p className="leading-relaxed">
+                      We couldn't match a known plugin — editing as a generic config. Closest
+                      guesses:{" "}
+                      {detection.candidates.slice(0, 3).map((c, i) => (
+                        <span key={c.id}>
+                          {i > 0 && ", "}
+                          <button
+                            className="underline decoration-dotted hover:text-primary"
+                            onClick={async () => {
+                              const s = await loadSample(c.id);
+                              if (s) applySample(s.content, s.format, c.id);
+                            }}
+                          >
+                            {c.name}
+                          </button>
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                )}
+                {schemaIssues.length > 0 && (
+                  <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 p-2.5 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-warning uppercase tracking-wider">
+                      <AlertTriangle className="size-3.5" />
+                      Schema check · {schemaIssues.length} issue
+                      {schemaIssues.length === 1 ? "" : "s"}
+                    </div>
+                    <ul className="text-[11px] space-y-0.5 text-muted-foreground">
+                      {schemaIssues.slice(0, 6).map((iss, i) => (
+                        <li key={i} className="flex gap-1.5">
+                          <span
+                            className={
+                              iss.level === "error"
+                                ? "text-destructive font-semibold"
+                                : "text-warning font-semibold"
+                            }
+                          >
+                            {iss.level === "error" ? "ERR" : "WARN"}
+                          </span>
+                          <span className="break-words">{iss.message}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {Object.entries(edited).map(([k, v]) => (
+                  <FieldEditor key={k} path={[k]} value={v} onChange={update} />
+                ))}
+              </motion.div>
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={detection && packForPlugin(detection.id) ? openSftpPack : openSftpCurrent}
-              disabled={!yamlOut}
-              className="h-8 px-2 text-xs"
-              title="Upload directly to your server via SFTP"
-            >
-              <Server className="size-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">SFTP</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={downloadOut}
-              disabled={!yamlOut}
-              className="h-8 px-2 sm:px-3 bg-primary hover:bg-primary/90 text-primary-foreground"
-              title="Export (⌘S)"
-            >
-              <Download className="size-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
           </div>
-        }
-      >
-        <pre ref={outputScrollRef} className="flex-1 overflow-auto rounded-xl bg-background/70 border border-border/60 p-4 text-xs font-mono leading-relaxed text-foreground/90 min-h-0">
-          {yamlOut ? (
-            <SyntaxLines text={yamlOut} format={format} />
-          ) : (
-            <span className="text-muted-foreground/60">// your config will appear here</span>
+          <ScrollToTop targetRef={editorScrollRef} />
+        </Panel>
+
+        {/* Output panel */}
+        <Panel
+          title="Output"
+          subtitle={`${format.toUpperCase()} · ready to ship`}
+          icon={<Download className="size-4" />}
+          delay={0.1}
+          hideOnMobile={mobileTab !== "output"}
+          accessory={
+            <div className="flex gap-1 flex-wrap justify-end">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={copyOut}
+                disabled={!yamlOut}
+                className="h-8 px-2"
+                title="Copy (⌘⇧C)"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {copied ? (
+                    <motion.span
+                      key="ok"
+                      initial={{ scale: 0.6, opacity: 0, rotate: -20 }}
+                      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                    >
+                      <Check className="size-4 text-success" />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="copy"
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                    >
+                      <Copy className="size-4" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={openSftpImport}
+                className="h-8 px-2 text-xs"
+                title="Import a config file directly from your server via SFTP"
+              >
+                <Download className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">Import</span>
+              </Button>
+              {sftpSession && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={saveToSftp}
+                  disabled={!yamlOut || savingSftp}
+                  className="h-8 px-2 text-xs"
+                  title="Save current config back to the imported SFTP file"
+                >
+                  {savingSftp ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Save className="size-3.5 sm:mr-1.5" />
+                  )}
+                  <span className="hidden sm:inline">Save to SFTP</span>
+                </Button>
+              )}
+              {detection && packForPlugin(detection.id) && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={exportPack}
+                  className="h-8 px-2 text-xs"
+                  title="Export every related file (config, messages, kits…)"
+                >
+                  <Package className="size-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Pack</span>
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={detection && packForPlugin(detection.id) ? openSftpPack : openSftpCurrent}
+                disabled={!yamlOut}
+                className="h-8 px-2 text-xs"
+                title="Upload directly to your server via SFTP"
+              >
+                <Server className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">SFTP</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={downloadOut}
+                disabled={!yamlOut}
+                className="h-8 px-2 sm:px-3 bg-primary hover:bg-primary/90 text-primary-foreground"
+                title="Export (⌘S)"
+              >
+                <Download className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </div>
+          }
+        >
+          <pre
+            ref={outputScrollRef}
+            className="flex-1 overflow-auto rounded-xl bg-background/70 border border-border/60 p-4 text-xs font-mono leading-relaxed text-foreground/90 min-h-0"
+          >
+            {yamlOut ? (
+              <SyntaxLines text={yamlOut} format={format} />
+            ) : (
+              <span className="text-muted-foreground/60">// your config will appear here</span>
+            )}
+          </pre>
+          {yamlOut && (
+            <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold px-1">
+              <span>{yamlOut.split("\n").length} lines</span>
+              <span className="opacity-40">·</span>
+              <span>{yamlOut.length.toLocaleString()} chars</span>
+              <span className="opacity-40">·</span>
+              <span>{(new Blob([yamlOut]).size / 1024).toFixed(1)} kb</span>
+            </div>
           )}
-        </pre>
-        {yamlOut && (
-          <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-semibold px-1">
-            <span>{yamlOut.split("\n").length} lines</span>
-            <span className="opacity-40">·</span>
-            <span>{yamlOut.length.toLocaleString()} chars</span>
-            <span className="opacity-40">·</span>
-            <span>{(new Blob([yamlOut]).size / 1024).toFixed(1)} kb</span>
-          </div>
-        )}
-        <ScrollToTop targetRef={outputScrollRef} />
-      </Panel>
+          <ScrollToTop targetRef={outputScrollRef} />
+        </Panel>
       </div>
-      <SftpDialog open={sftpOpen} onOpenChange={setSftpOpen} files={sftpFiles} />
+      <SftpDialog
+        open={sftpOpen}
+        onOpenChange={setSftpOpen}
+        files={sftpFiles}
+        onImport={handleSftpImport}
+      />
     </div>
   );
 }
@@ -808,7 +938,9 @@ function Panel({
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-display text-sm font-semibold leading-tight truncate">{title}</h3>
-            <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>{subtitle}</p>
+            <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>
+              {subtitle}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -860,7 +992,8 @@ function EmptyState() {
       </motion.div>
       <h4 className="font-display font-semibold text-base mb-1">No config yet</h4>
       <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-        Paste YAML / TOML / JSON, drop a file, or load a sample. We auto-detect the plugin and build the editor for you.
+        Paste YAML / TOML / JSON, drop a file, or load a sample. We auto-detect the plugin and build
+        the editor for you.
       </p>
     </div>
   );

@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { sftpUpload, sftpTestConnection, sftpListDirectory, type RemoteItem } from "@/lib/sftp.functions";
+import {
+  sftpUpload,
+  sftpTestConnection,
+  sftpListDirectory,
+  sftpReadFile,
+  type RemoteItem,
+} from "@/lib/sftp.functions";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +21,40 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { CheckCircle2, FileText, Folder, FolderOpen, Loader2, Server, Save, Trash2, Download, Terminal, ChevronRight, ChevronLeft } from "lucide-react";
+import {
+  CheckCircle2,
+  FileText,
+  Folder,
+  FolderOpen,
+  Loader2,
+  Server,
+  Save,
+  Trash2,
+  Download,
+  Terminal,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
 import { buildSftpScript } from "@/lib/auto-fix";
 
 export type SftpFile = { path: string; contents: string };
+
+export type SftpSession = {
+  host: string;
+  port: number;
+  username: string;
+  remotePath: string;
+  authType: "password" | "key";
+  password?: string;
+  privateKey?: string;
+  passphrase?: string;
+};
+
+export type SftpImportResult = {
+  contents: string;
+  filename: string;
+  session: SftpSession;
+};
 
 type Profile = {
   name: string;
@@ -45,14 +81,17 @@ export function SftpDialog({
   open,
   onOpenChange,
   files,
+  onImport,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   files: SftpFile[];
+  onImport?: (res: SftpImportResult) => void;
 }) {
   const upload = useServerFn(sftpUpload);
   const testConnection = useServerFn(sftpTestConnection);
   const listDirectory = useServerFn(sftpListDirectory);
+  const readFile = useServerFn(sftpReadFile);
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<string | null>(null);
@@ -60,6 +99,9 @@ export function SftpDialog({
   const [browsing, setBrowsing] = useState(false);
   const [browsingPath, setBrowsingPath] = useState("/");
   const [remoteItems, setRemoteItems] = useState<RemoteItem[]>([]);
+  const [remoteFile, setRemoteFile] = useState<RemoteItem | null>(null);
+  const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
+  const [loadingRemote, setLoadingRemote] = useState(false);
   const [browsingError, setBrowsingError] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [host, setHost] = useState("");
@@ -67,15 +109,16 @@ export function SftpDialog({
   const [username, setUsername] = useState("");
   const [remoteDir, setRemoteDir] = useState("/plugins");
   const [authType, setAuthType] = useState<"password" | "key">("password");
+  const [mode, setMode] = useState<"upload" | "import">("upload");
   const [password, setPassword] = useState("");
   const [privateKey, setPrivateKey] = useState("");
   const [passphrase, setPassphrase] = useState("");
   const [profileName, setProfileName] = useState("");
 
-const normalizedRemoteDir = useMemo(() => {
-  const trimmed = remoteDir.trim().replace(/\/+$/, "");
-  return trimmed.length === 0 ? "/" : trimmed;
-}, [remoteDir]);
+  const normalizedRemoteDir = useMemo(() => {
+    const trimmed = remoteDir.trim().replace(/\/+$/, "");
+    return trimmed.length === 0 ? "/" : trimmed;
+  }, [remoteDir]);
 
   const previewFiles = useMemo(() => {
     const prefix = normalizedRemoteDir === "/" ? "/" : `${normalizedRemoteDir}/`;
@@ -98,6 +141,12 @@ const normalizedRemoteDir = useMemo(() => {
   useEffect(() => {
     if (!open) return;
     setProfiles(loadProfiles());
+    setRemoteFile(null);
+    setRemoteLoadError(null);
+    setLoadingRemote(false);
+    setBrowsingPath("/");
+    setRemoteItems([]);
+    setMode(files.length > 0 ? "upload" : "import");
     try {
       const last = JSON.parse(localStorage.getItem(LAST_KEY) ?? "{}");
       if (last.host) {
@@ -107,8 +156,10 @@ const normalizedRemoteDir = useMemo(() => {
         setRemoteDir(last.remoteDir ?? "/plugins");
         setAuthType(last.authType ?? "password");
       }
-    } catch {}
-  }, [open]);
+    } catch (err) {
+      // ignore parse errors from malformed saved state
+    }
+  }, [open, files.length]);
 
   useEffect(() => {
     setTestStatus(null);
@@ -239,6 +290,71 @@ const normalizedRemoteDir = useMemo(() => {
     toast.success(`Selected: ${path}`);
   };
 
+  const buildImportSession = (path: string): SftpSession => ({
+    host,
+    port,
+    username,
+    authType,
+    password: authType === "password" ? password : undefined,
+    privateKey: authType === "key" ? privateKey : undefined,
+    passphrase: authType === "key" ? passphrase : undefined,
+    remotePath: path,
+  });
+
+  const loadRemoteFile = async () => {
+    if (!remoteFile) {
+      toast.error("Select a file to import");
+      return;
+    }
+    if (!host || !username) {
+      toast.error("Host and username are required");
+      return;
+    }
+    if (authType === "password" && !password) {
+      toast.error("Password is required");
+      return;
+    }
+    if (authType === "key" && !privateKey) {
+      toast.error("Private key is required");
+      return;
+    }
+
+    setLoadingRemote(true);
+    setRemoteLoadError(null);
+
+    try {
+      const res = await readFile({
+        data: {
+          host,
+          port,
+          username,
+          ...(authType === "password"
+            ? { password }
+            : { privateKey, ...(passphrase ? { passphrase } : {}) }),
+          remotePath: remoteFile.path,
+        },
+      });
+
+      if (res.ok) {
+        toast.success(`Imported ${remoteFile.path}`);
+        onImport?.({
+          contents: res.contents,
+          filename: remoteFile.name,
+          session: buildImportSession(remoteFile.path),
+        });
+        onOpenChange(false);
+      } else {
+        setRemoteLoadError(res.error);
+        toast.error("Failed to import file", { description: res.error });
+      }
+    } catch (e: any) {
+      setRemoteLoadError(e?.message ?? String(e));
+      toast.error("Failed to import file", { description: e?.message ?? String(e) });
+    } finally {
+      setLoadingRemote(false);
+    }
+  };
+
   const handleUpload = async () => {
     if (!host || !username || !remoteDir) {
       toast.error("Host, username and remote dir are required");
@@ -254,10 +370,7 @@ const normalizedRemoteDir = useMemo(() => {
     }
     setBusy(true);
     try {
-      localStorage.setItem(
-        LAST_KEY,
-        JSON.stringify({ host, port, username, remoteDir, authType }),
-      );
+      localStorage.setItem(LAST_KEY, JSON.stringify({ host, port, username, remoteDir, authType }));
       const res = await upload({
         data: {
           host,
@@ -290,13 +403,41 @@ const normalizedRemoteDir = useMemo(() => {
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Server className="size-4 text-primary" /> Export via SFTP
+            <Server className="size-4 text-primary" />
+            {mode === "upload" ? "Export via SFTP" : "Import via SFTP"}
           </DialogTitle>
           <DialogDescription>
-            Upload {files.length} file{files.length === 1 ? "" : "s"} directly to your server.
+            {mode === "upload" ? (
+              <>
+                Upload {files.length} file{files.length === 1 ? "" : "s"} directly to your server.
+              </>
+            ) : (
+              <>
+                Open a remote config file, edit it in the editor, and save it back to your server.
+              </>
+            )}
             Credentials are sent only to your project's server, never persisted.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex gap-2 mb-3">
+          <Button
+            size="sm"
+            variant={mode === "upload" ? "secondary" : "outline"}
+            onClick={() => setMode("upload")}
+            className="h-8"
+          >
+            Upload
+          </Button>
+          <Button
+            size="sm"
+            variant={mode === "import" ? "secondary" : "outline"}
+            onClick={() => setMode("import")}
+            className="h-8"
+          >
+            Import
+          </Button>
+        </div>
 
         {profiles.length > 0 && (
           <div className="flex flex-wrap gap-1.5 -mt-2">
@@ -322,20 +463,48 @@ const normalizedRemoteDir = useMemo(() => {
 
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-2 space-y-1">
-            <Label htmlFor="sftp-host" className="text-xs">Host</Label>
-            <Input id="sftp-host" value={host} onChange={(e) => setHost(e.target.value)} placeholder="sftp.example.com" />
+            <Label htmlFor="sftp-host" className="text-xs">
+              Host
+            </Label>
+            <Input
+              id="sftp-host"
+              value={host}
+              onChange={(e) => setHost(e.target.value)}
+              placeholder="sftp.example.com"
+            />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="sftp-port" className="text-xs">Port</Label>
-            <Input id="sftp-port" type="number" value={port} onChange={(e) => setPort(Number(e.target.value) || 22)} />
+            <Label htmlFor="sftp-port" className="text-xs">
+              Port
+            </Label>
+            <Input
+              id="sftp-port"
+              type="number"
+              value={port}
+              onChange={(e) => setPort(Number(e.target.value) || 22)}
+            />
           </div>
           <div className="col-span-2 space-y-1">
-            <Label htmlFor="sftp-user" className="text-xs">Username</Label>
-            <Input id="sftp-user" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
+            <Label htmlFor="sftp-user" className="text-xs">
+              Username
+            </Label>
+            <Input
+              id="sftp-user"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="off"
+            />
           </div>
           <div className="col-span-3 space-y-1">
-            <Label htmlFor="sftp-dir" className="text-xs">Remote directory</Label>
-            <Input id="sftp-dir" value={remoteDir} onChange={(e) => setRemoteDir(e.target.value)} placeholder="/home/minecraft/plugins/EssentialsX" />
+            <Label htmlFor="sftp-dir" className="text-xs">
+              Remote directory
+            </Label>
+            <Input
+              id="sftp-dir"
+              value={remoteDir}
+              onChange={(e) => setRemoteDir(e.target.value)}
+              placeholder="/home/minecraft/plugins/EssentialsX"
+            />
           </div>
         </div>
 
@@ -343,11 +512,17 @@ const normalizedRemoteDir = useMemo(() => {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Server className="size-4 text-primary" />
-              <span>Upload Destination</span>
+              <span>{mode === "upload" ? "Upload Destination" : "Remote target"}</span>
             </div>
-            <span className="rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-              {files.length} file{files.length === 1 ? "" : "s"}
-            </span>
+            {mode === "upload" ? (
+              <span className="rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                {files.length} file{files.length === 1 ? "" : "s"}
+              </span>
+            ) : (
+              <span className="rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                {remoteFile ? "1 file selected" : "No file selected"}
+              </span>
+            )}
           </div>
 
           {/* Folder Browser */}
@@ -382,13 +557,15 @@ const normalizedRemoteDir = useMemo(() => {
                 {remoteItems.map((item) => (
                   <button
                     key={item.path}
-                    onClick={() => item.isDirectory ? browseFolders(item.path) : null}
+                    onClick={() => {
+                      if (item.isDirectory) browseFolders(item.path);
+                      else setRemoteFile(item);
+                    }}
                     className={`w-full flex items-center justify-between gap-2 p-2 text-sm transition-colors ${
                       item.isDirectory
                         ? "hover:bg-muted/40 cursor-pointer text-foreground"
-                        : "text-muted-foreground/60 cursor-default"
-                    }`}
-                    disabled={!item.isDirectory}
+                        : "cursor-pointer text-foreground"
+                    } ${remoteFile?.path === item.path ? "bg-primary/10 border border-primary/60" : ""}`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {item.isDirectory ? (
@@ -398,8 +575,10 @@ const normalizedRemoteDir = useMemo(() => {
                       )}
                       <span className="truncate font-medium">{item.name}</span>
                     </div>
-                    {item.isDirectory && (
+                    {item.isDirectory ? (
                       <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground font-mono">File</span>
                     )}
                   </button>
                 ))}
@@ -414,26 +593,55 @@ const normalizedRemoteDir = useMemo(() => {
               >
                 <FolderOpen className="size-3.5" /> Select {browsingPath}
               </Button>
+
+              {mode === "import" && (
+                <div className="mt-3 space-y-2">
+                  <div className="text-xs text-muted-foreground">Selected remote file</div>
+                  <div className="rounded-md border border-border/60 bg-background p-3 text-sm font-mono break-all">
+                    {remoteFile?.path ?? "No file selected"}
+                  </div>
+                  {remoteLoadError && (
+                    <div className="text-xs text-destructive">{remoteLoadError}</div>
+                  )}
+                  <Button
+                    onClick={loadRemoteFile}
+                    disabled={!remoteFile || loadingRemote}
+                    className="w-full"
+                  >
+                    {loadingRemote ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <FolderOpen className="size-4" />
+                    )}
+                    {loadingRemote ? "Importing…" : "Import selected file"}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
           {/* Server path hierarchy */}
           <div className="rounded-md bg-muted/40 p-3 space-y-2 border border-border/60">
-            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Path</div>
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Target Path
+            </div>
             <div className="text-sm font-mono bg-background rounded px-2 py-1 text-foreground break-all">
               {normalizedRemoteDir}
             </div>
             <div className="flex flex-wrap gap-1 mt-2">
-              {normalizedRemoteDir.split("/").filter(Boolean).map((segment, i, arr) => {
-                const path = "/" + arr.slice(0, i + 1).join("/");
-                return (
-                  <div key={path} className="flex items-center gap-1 text-xs">
-                    <Folder className="size-3.5 text-primary" />
-                    <span className="font-medium text-muted-foreground">{segment}</span>
-                    {i < arr.length - 1 && <span className="text-muted/60">/</span>}
-                  </div>
-                );
-              })}
+              {normalizedRemoteDir
+                .split("/")
+                .filter(Boolean)
+                .map((segment, i, arr) => {
+                  const path = "/" + arr.slice(0, i + 1).join("/");
+                  return (
+                    <div key={path} className="flex items-center gap-1 text-xs">
+                      <Folder className="size-3.5 text-primary" />
+                      <span className="font-medium text-muted-foreground">{segment}</span>
+                      {i < arr.length - 1 && <span className="text-muted/60">/</span>}
+                    </div>
+                  );
+                })}
               {normalizedRemoteDir === "/" && (
                 <span className="text-xs text-muted-foreground italic">root directory</span>
               )}
@@ -443,7 +651,9 @@ const normalizedRemoteDir = useMemo(() => {
           {/* Files to upload */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Files to Upload</div>
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Files to Upload
+              </div>
               {totalBytes > 0 && (
                 <div className="text-[10px] text-muted-foreground font-mono">
                   {totalBytes > 1024 ? (totalBytes / 1024).toFixed(1) + " KB" : totalBytes + " B"}
@@ -457,7 +667,10 @@ const normalizedRemoteDir = useMemo(() => {
                 </div>
               ) : (
                 previewFiles.map((file, idx) => (
-                  <div key={idx} className="flex items-start gap-2 p-2 hover:bg-muted/40 transition-colors">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 p-2 hover:bg-muted/40 transition-colors"
+                  >
                     <FileText className="size-4 shrink-0 text-muted-foreground mt-0.5" />
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="text-xs font-medium truncate">{file.path}</div>
@@ -477,8 +690,12 @@ const normalizedRemoteDir = useMemo(() => {
 
         <Tabs value={authType} onValueChange={(v) => setAuthType(v as any)}>
           <TabsList className="grid w-full grid-cols-2 h-8">
-            <TabsTrigger value="password" className="text-xs">Password</TabsTrigger>
-            <TabsTrigger value="key" className="text-xs">Private key</TabsTrigger>
+            <TabsTrigger value="password" className="text-xs">
+              Password
+            </TabsTrigger>
+            <TabsTrigger value="key" className="text-xs">
+              Private key
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="password" className="mt-2">
             <Input
@@ -526,7 +743,11 @@ const normalizedRemoteDir = useMemo(() => {
               disabled={testing || busy || browsing}
               className="h-8 gap-1.5"
             >
-              {testing ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              {testing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="size-4" />
+              )}
               Test
             </Button>
             <Button
@@ -536,14 +757,20 @@ const normalizedRemoteDir = useMemo(() => {
               disabled={browsing || busy || testing}
               className="h-8 gap-1.5"
             >
-              {browsing ? <Loader2 className="size-4 animate-spin" /> : <FolderOpen className="size-4" />}
+              {browsing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <FolderOpen className="size-4" />
+              )}
               Browse
             </Button>
           </div>
         </div>
 
         {(testStatus || testError) && (
-          <div className={`rounded-md border p-3 text-sm space-y-1 ${testError ? "border-destructive/50 bg-destructive/10" : "border-primary/50 bg-primary/10"}`}>
+          <div
+            className={`rounded-md border p-3 text-sm space-y-1 ${testError ? "border-destructive/50 bg-destructive/10" : "border-primary/50 bg-primary/10"}`}
+          >
             <div className="flex items-center gap-2">
               {testError ? (
                 <>
@@ -565,12 +792,18 @@ const normalizedRemoteDir = useMemo(() => {
 
         <div className="rounded-md border border-border/50 bg-muted/30 p-2 text-[11px] text-muted-foreground leading-relaxed">
           <Terminal className="size-3 inline mr-1 -mt-0.5" />
-          No backend? Use <strong>Download script</strong> — runs <code className="font-mono">sftp</code> locally
-          and works on any static host (Vercel, GitHub Pages…).
+          No backend? Use <strong>Download script</strong> — runs{" "}
+          <code className="font-mono">sftp</code> locally and works on any static host (Vercel,
+          GitHub Pages…).
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2 flex-wrap">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy} className="order-2 sm:order-1">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={busy}
+            className="order-2 sm:order-1"
+          >
             Cancel
           </Button>
           <Button
@@ -597,7 +830,11 @@ const normalizedRemoteDir = useMemo(() => {
           >
             <Download className="size-4" /> Script
           </Button>
-          <Button onClick={handleUpload} disabled={busy} className="gap-1.5 order-1 sm:order-3 sm:ml-auto">
+          <Button
+            onClick={handleUpload}
+            disabled={busy}
+            className="gap-1.5 order-1 sm:order-3 sm:ml-auto"
+          >
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Server className="size-4" />}
             {busy ? "Uploading…" : `Upload ${files.length}`}
           </Button>

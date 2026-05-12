@@ -26,6 +26,16 @@ const SftpTestInputSchema = z.object({
   passphrase: z.string().max(1024).optional(),
 });
 
+const SftpReadFileInputSchema = z.object({
+  host: z.string().min(1).max(253),
+  port: z.number().int().min(1).max(65535).default(22),
+  username: z.string().min(1).max(128),
+  password: z.string().max(4096).optional(),
+  privateKey: z.string().max(20_000).optional(),
+  passphrase: z.string().max(1024).optional(),
+  remotePath: z.string().min(1).max(1024),
+});
+
 const SftpListInputSchema = z.object({
   host: z.string().min(1).max(253),
   port: z.number().int().min(1).max(65535).default(22),
@@ -85,7 +95,9 @@ export const sftpTestConnection = createServerFn({ method: "POST" })
     } finally {
       try {
         await sftp.end();
-      } catch {}
+      } catch (err) {
+        // ignore cleanup errors
+      }
     }
   });
 
@@ -146,7 +158,55 @@ export const sftpListDirectory = createServerFn({ method: "POST" })
     } finally {
       try {
         await sftp.end();
-      } catch {}
+      } catch (err) {
+        // ignore cleanup errors
+      }
+    }
+  });
+
+export const sftpReadFile = createServerFn({ method: "POST" })
+  .inputValidator((data) => SftpReadFileInputSchema.parse(data))
+  .handler(async ({ data }) => {
+    let SftpClient: any;
+    try {
+      const mod = await getSftpClientModule();
+      SftpClient = mod.default;
+    } catch (e: any) {
+      return {
+        ok: false as const,
+        error:
+          "SFTP module unavailable on this server runtime. Deploy to a Node.js host (Netlify Functions / Node, Render, Railway) instead of edge Workers.",
+      };
+    }
+
+    const sftp = new SftpClient();
+    try {
+      await sftp.connect({
+        host: data.host,
+        port: data.port,
+        username: data.username,
+        ...(data.password ? { password: data.password } : {}),
+        ...(data.privateKey ? { privateKey: data.privateKey } : {}),
+        ...(data.passphrase ? { passphrase: data.passphrase } : {}),
+        readyTimeout: 15000,
+      });
+
+      const remotePath = data.remotePath.trim();
+      const buffer = await sftp.get(remotePath);
+      const contents = Buffer.isBuffer(buffer) ? buffer.toString("utf8") : String(buffer);
+
+      return { ok: true as const, contents };
+    } catch (e: any) {
+      return {
+        ok: false as const,
+        error: e?.message ? String(e.message) : "Failed to read remote file",
+      };
+    } finally {
+      try {
+        await sftp.end();
+      } catch (err) {
+        // ignore cleanup errors
+      }
     }
   });
 
@@ -183,8 +243,10 @@ export const sftpUpload = createServerFn({ method: "POST" })
       try {
         const exists = await sftp.exists(dir);
         if (!exists) await sftp.mkdir(dir, true);
-      } catch {
-        await sftp.mkdir(dir, true).catch(() => {});
+      } catch (err) {
+        await sftp.mkdir(dir, true).catch(() => {
+          // ignore directory creation errors
+        });
       }
 
       for (const f of data.files) {
@@ -207,6 +269,8 @@ export const sftpUpload = createServerFn({ method: "POST" })
     } finally {
       try {
         await sftp.end();
-      } catch {}
+      } catch (err) {
+        // ignore cleanup errors
+      }
     }
   });
