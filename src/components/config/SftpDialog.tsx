@@ -247,13 +247,42 @@ export function SftpDialog({
           </Button>
         </div>
 
-        <DialogFooter>
+        <div className="rounded-md border border-border/50 bg-muted/30 p-2 text-[11px] text-muted-foreground leading-relaxed">
+          <Terminal className="size-3 inline mr-1 -mt-0.5" />
+          No backend? Use <strong>Download script</strong> — runs <code className="font-mono">sftp</code> locally
+          and works on any static host (Vercel, GitHub Pages…).
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-2 flex-wrap">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancel
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!host || !username || !remoteDir) {
+                toast.error("Host, username, remote dir required");
+                return;
+              }
+              const script = buildSftpScript({ host, port, username, remoteDir, files });
+              const blob = new Blob([script], { type: "text/x-shellscript" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "upload.sh";
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success("Script downloaded", {
+                description: "Run: chmod +x upload.sh && ./upload.sh",
+              });
+            }}
+            className="gap-1.5"
+          >
+            <Download className="size-4" /> Script
+          </Button>
           <Button onClick={handleUpload} disabled={busy} className="gap-1.5">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Server className="size-4" />}
-            {busy ? "Uploading…" : `Upload ${files.length} file${files.length === 1 ? "" : "s"}`}
+            {busy ? "Uploading…" : `Upload ${files.length}`}
           </Button>
         </DialogFooter>
       </DialogContent>
