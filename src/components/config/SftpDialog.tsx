@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Server, Save, Trash2 } from "lucide-react";
+import { Loader2, Server, Save, Trash2, Download, Terminal } from "lucide-react";
+import { buildSftpScript } from "@/lib/auto-fix";
 
 export type SftpFile = { path: string; contents: string };
 
