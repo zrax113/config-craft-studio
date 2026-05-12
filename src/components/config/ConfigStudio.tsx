@@ -453,12 +453,36 @@ export function ConfigStudio() {
               className="mt-3 flex items-start gap-2 text-xs bg-destructive/10 border border-destructive/30 px-3 py-2 rounded-md text-destructive"
             >
               <FileWarning className="size-3.5 mt-0.5 shrink-0" />
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="font-semibold">
                   {parsed.error.line ? `Line ${parsed.error.line} · ` : ""}Parse error
                 </div>
-                <div className="text-destructive/80 mt-0.5 font-mono">{parsed.error.message}</div>
+                <div className="text-destructive/80 mt-0.5 font-mono break-words">{parsed.error.message}</div>
               </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10 shrink-0"
+                onClick={() => {
+                  const res = autoFixYaml(raw);
+                  if (res.applied.length === 0) {
+                    toast.info("Nothing obvious to fix");
+                    return;
+                  }
+                  setRaw(res.fixed);
+                  if (res.ok) {
+                    toast.success("Auto-fixed", { description: res.applied.join(" · ") });
+                    playSound("ok");
+                  } else {
+                    toast.warning("Applied fixes — still has errors", {
+                      description: res.applied.join(" · "),
+                    });
+                  }
+                }}
+                title="Try to auto-fix common YAML issues (tabs, smart quotes, missing colon space…)"
+              >
+                <Wrench className="size-3" /> Auto-fix
+              </Button>
             </motion.div>
           )}
           {parsed.ok && raw.trim() && (
