@@ -645,6 +645,17 @@ export function ConfigStudio() {
             )}
             <Button
               size="sm"
+              variant="ghost"
+              onClick={detection && packForPlugin(detection.id) ? openSftpPack : openSftpCurrent}
+              disabled={!yamlOut}
+              className="h-8 px-2 text-xs"
+              title="Upload directly to your server via SFTP"
+            >
+              <Server className="size-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">SFTP</span>
+            </Button>
+            <Button
+              size="sm"
               onClick={downloadOut}
               disabled={!yamlOut}
               className="h-8 px-2 sm:px-3 bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -675,6 +686,7 @@ export function ConfigStudio() {
         <ScrollToTop targetRef={outputScrollRef} />
       </Panel>
       </div>
+      <SftpDialog open={sftpOpen} onOpenChange={setSftpOpen} files={sftpFiles} />
     </div>
   );
 }
