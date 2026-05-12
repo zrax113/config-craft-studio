@@ -35,8 +35,10 @@ import {
   HelpCircle,
   Maximize2,
   Minimize2,
+  Server,
 } from "lucide-react";
 import { useBrandConfig } from "@/lib/brand-config";
+import { SftpDialog, type SftpFile } from "./SftpDialog";
 
 function setDeep(obj: any, path: string[], value: any): any {
   if (path.length === 0) return value;
@@ -60,6 +62,8 @@ export function ConfigStudio() {
   const [copied, setCopied] = useState(false);
   const [packIds, setPackIds] = useState<string[] | null>(null);
   const [mobileTab, setMobileTab] = useState<"input" | "editor" | "output">("input");
+  const [sftpOpen, setSftpOpen] = useState(false);
+  const [sftpFiles, setSftpFiles] = useState<SftpFile[]>([]);
   const restoredRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
@@ -244,6 +248,34 @@ export function ConfigStudio() {
     setCopied(true);
     playSound("ok");
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  function currentFilename() {
+    const ext = format === "toml" ? "toml" : format === "json" ? "json" : "yml";
+    const baseName =
+      detection && detection.id !== "unknown" ? detection.id : filename?.replace(/\.[^.]+$/, "") || "config";
+    return `${baseName}.${ext}`;
+  }
+
+  async function openSftpCurrent() {
+    if (!yamlOut) return;
+    setSftpFiles([{ path: currentFilename(), contents: yamlOut }]);
+    setSftpOpen(true);
+  }
+
+  async function openSftpPack() {
+    if (!detection) return openSftpCurrent();
+    const packKey = packForPlugin(detection.id);
+    if (!packKey) return openSftpCurrent();
+    const pack = PLUGIN_PACKS[packKey];
+    const out: SftpFile[] = [];
+    for (const f of pack.files) {
+      const sample = await loadSample(f.sampleId);
+      if (sample) out.push({ path: f.filename, contents: sample.content });
+    }
+    if (out.length === 0) return openSftpCurrent();
+    setSftpFiles(out);
+    setSftpOpen(true);
   }
 
   function downloadOut() {
