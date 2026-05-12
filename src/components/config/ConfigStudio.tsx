@@ -64,6 +64,7 @@ export function ConfigStudio() {
   const [copied, setCopied] = useState(false);
   const [packIds, setPackIds] = useState<string[] | null>(null);
   const [mobileTab, setMobileTab] = useState<"input" | "editor" | "output">("input");
+  const [mobileTabFullscreen, setMobileTabFullscreen] = useState(false);
   const [sftpOpen, setSftpOpen] = useState(false);
   const [sftpFiles, setSftpFiles] = useState<SftpFile[]>([]);
   const restoredRef = useRef(false);
@@ -345,27 +346,40 @@ export function ConfigStudio() {
   return (
     <div className="h-full min-h-0 flex flex-col">
       {/* Mobile tab switcher — splits Input / Editor / Output into tabs on small screens */}
-      <div className="lg:hidden flex items-center gap-1 mb-3 p-1 rounded-lg bg-muted/30 border border-border/50 shrink-0">
-        {(["input", "editor", "output"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setMobileTab(t);
-              playSound("click");
-            }}
-            className={`flex-1 text-[11px] uppercase tracking-wider font-semibold py-1.5 rounded-md transition-colors ${
-              mobileTab === t
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            aria-pressed={mobileTab === t}
-          >
-            {t === "input" ? "Input" : t === "editor" ? "Editor" : "Output"}
-          </button>
-        ))}
+      <div className="lg:hidden flex items-center justify-between gap-1 mb-3 p-1 rounded-lg bg-muted/30 border border-border/50 shrink-0">
+        <div className="flex items-center gap-1 flex-1">
+          {(["input", "editor", "output"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => {
+                setMobileTab(t);
+                playSound("click");
+              }}
+              className={`flex-1 text-[11px] uppercase tracking-wider font-semibold py-1.5 rounded-md transition-colors ${
+                mobileTab === t
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-pressed={mobileTab === t}
+            >
+              {t === "input" ? "Input" : t === "editor" ? "Editor" : "Output"}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setMobileTabFullscreen(!mobileTabFullscreen)}
+          className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+          title={mobileTabFullscreen ? "Exit fullscreen" : "Fullscreen tab"}
+        >
+          {mobileTabFullscreen ? (
+            <Minimize2 className="size-3.5" />
+          ) : (
+            <Maximize2 className="size-3.5" />
+          )}
+        </button>
       </div>
 
-      <div className={`grid gap-5 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)] 2xl:gap-6 flex-1 min-h-0`} data-mobile-tab={mobileTab}>
+      <div className={`grid gap-5 grid-cols-1 ${mobileTabFullscreen ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)]"} 2xl:gap-6 flex-1 min-h-0`} data-mobile-tab={mobileTab}>
         {/* Hide non-active panels on mobile via attribute selector below */}
       <Panel
         title="Input"
